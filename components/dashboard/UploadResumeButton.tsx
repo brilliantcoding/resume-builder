@@ -10,7 +10,7 @@ type Stage = 'idle' | 'dragging' | 'uploading' | 'parsing' | 'done' | 'error'
 const STEPS = [
   { key: 'upload',  label: 'Uploading file',          detail: 'Sending to server' },
   { key: 'extract', label: 'Extracting text',          detail: 'Reading document content' },
-  { key: 'parse',   label: 'AI parsing resume',        detail: 'NVIDIA NIM structuring your data' },
+  { key: 'parse',   label: 'AI parsing resume',        detail: 'DeepSeek AI structuring your data' },
   { key: 'save',    label: 'Saving to your workspace', detail: 'Almost done' },
 ] as const
 
@@ -322,7 +322,7 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                     <div className="flex items-center gap-2 rounded-lg border border-violet-500/20 bg-violet-500/[0.06] px-3.5 py-2.5">
                       <Sparkles className="h-3.5 w-3.5 flex-shrink-0 text-violet-400" />
                       <p className="text-xs text-violet-300">
-                        NVIDIA NIM AI is structuring your resume data — this usually takes 5–15 seconds
+                        DeepSeek AI is structuring your resume data — this usually takes 5–15 seconds
                       </p>
                     </div>
                   )}

@@ -45,10 +45,10 @@ export function Footer() {
               Build professional, ATS-optimized resumes in minutes with AI-powered content generation and 9 stunning templates.
             </p>
 
-            {/* NVIDIA badge */}
+            {/* Powered by badge */}
             <div className="mb-6 inline-flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-500">
               <Zap className="h-3 w-3 text-emerald-500" />
-              Powered by NVIDIA NIM
+              Powered by DeepSeek AI
             </div>
 
             {/* Socials */}
@@ -92,7 +92,7 @@ export function Footer() {
             © {new Date().getFullYear()} ResumeAI. All rights reserved.
           </p>
           <p className="text-xs text-slate-600">
-            Built with Next.js · AI by NVIDIA NIM
+            Built with Next.js · AI by DeepSeek
           </p>
         </div>
       </div>

@@ -168,9 +168,9 @@ export function AltaCVTemplate({ data, scale = 1 }: Props) {
             <ContactRow icon="✉" value={p.email} />
             <ContactRow icon="☎" value={p.phone} />
             <ContactRow icon="⌖" value={p.location} />
-            <ContactRow icon="in" value={p.linkedin} />
-            <ContactRow icon="⌥" value={p.github} />
-            <ContactRow icon="⊕" value={p.website} />
+            {p.linkedin && <ContactRow icon="in" value={p.linkedin} />}
+            {p.github && <ContactRow icon="⌥" value={p.github} />}
+            {p.website && <ContactRow icon="⊕" value={p.website} />}
           </div>
 
           {/* Education */}

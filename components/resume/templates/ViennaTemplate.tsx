@@ -104,7 +104,7 @@ export function ViennaTemplate({ data, scale = 1 }: Props) {
         }}>{p.fullName || 'Your Name'}</h1>
 
         {p.jobTitle && (
-          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', fontWeight: '400', letterSpacing: '1.5px', textTransform: 'uppercase', fontSize: '9px', marginBottom: '12px' }}>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', fontWeight: '400', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '12px' }}>
             {p.jobTitle}
           </p>
         )}

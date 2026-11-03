@@ -41,7 +41,6 @@ export function JakesTemplate({ data, scale = 1 }: Props) {
     <div style={{
       transform: `scale(${scale})`,
       transformOrigin: 'top left',
-      fontFamily: '"Nimbus Mono PS", "Courier New", monospace',
       fontFamily: '"Computer Modern", "Latin Modern", Georgia, serif',
       fontSize: '10px',
       lineHeight: '1.4',

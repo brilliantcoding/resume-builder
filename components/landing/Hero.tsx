@@ -25,7 +25,7 @@ export function Hero() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500" />
               </div>
-              Powered by NVIDIA NIM AI
+              Powered by DeepSeek AI
               <span className="ml-0.5 rounded-full bg-violet-600/80 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">NEW</span>
             </div>
 

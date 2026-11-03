@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { chatWithFallback } from '@/lib/nvidia'
+import { chatWithFallback } from '@/lib/local-ai'
 
 export async function POST(req: NextRequest) {
   const session = await auth()

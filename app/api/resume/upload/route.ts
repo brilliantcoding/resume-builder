@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { chatForParsing } from '@/lib/nvidia'
+import { chatForParsing } from '@/lib/local-ai'
 import { defaultResumeData, ResumeData } from '@/types/resume'
 // Use internal path to avoid pdf-parse running its test file on import
 // eslint-disable-next-line @typescript-eslint/no-require-imports
