@@ -24,7 +24,7 @@ function CircularGauge({ score, grade }: { score: number; grade: ATSResult['grad
 
   const trackColor = '#1E1E3A'
   const fillColor =
-    grade === 'excellent' ? '#DC2626' :
+    grade === 'excellent' ? '#059669' :
     grade === 'good'      ? '#059669' :
     grade === 'fair'      ? '#D97706' :
                             '#DC2626'
@@ -37,7 +37,7 @@ function CircularGauge({ score, grade }: { score: number; grade: ATSResult['grad
   }[grade]
 
   const gradeColor = {
-    excellent: 'text-crimson-400',
+    excellent: 'text-emerald-400',
     good: 'text-emerald-400',
     fair: 'text-amber-400',
     poor: 'text-red-400',
@@ -89,9 +89,9 @@ function CategoryRow({ cat, onSectionClick }: { cat: ScoreCategory; onSectionCli
   const pct = cat.max > 0 ? (cat.score / cat.max) * 100 : 0
 
   const barColor =
-    pct >= 80 ? 'from-crimson-500 to-amber-500' :
-    pct >= 60 ? 'from-emerald-500 to-teal-500' :
-    pct >= 40 ? 'from-amber-500 to-orange-500' :
+    pct >= 80 ? 'from-emerald-500 to-teal-500' :
+    pct >= 60 ? 'from-amber-500 to-yellow-500' :
+    pct >= 40 ? 'from-orange-500 to-amber-500' :
                 'from-red-500 to-rose-500'
 
   const sectionMap: Record<string, string> = {
@@ -216,9 +216,9 @@ export function ATSScorePanel({ data, onSectionClick }: Props) {
             {result.categories.map((cat) => {
               const pct = cat.max > 0 ? Math.round((cat.score / cat.max) * 100) : 0
               const dotColor =
-                pct >= 80 ? 'bg-crimson-400' :
-                pct >= 60 ? 'bg-emerald-400' :
-                pct >= 40 ? 'bg-amber-400' :
+                pct >= 80 ? 'bg-emerald-400' :
+                pct >= 60 ? 'bg-amber-400' :
+                pct >= 40 ? 'bg-orange-400' :
                             'bg-red-400'
               return (
                 <div key={cat.id} className="flex items-center gap-2">
