@@ -8,11 +8,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants = {
-  primary: 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-88 text-white shadow-sm shadow-violet-500/20 hover:shadow-violet-500/30 hover:-translate-y-px',
+  primary: 'bg-gradient-to-r from-crimson-800 to-crimson-700 hover:opacity-88 text-white shadow-sm shadow-crimson-500/20 hover:shadow-crimson-500/30 hover:-translate-y-px',
   secondary: 'bg-white/[0.06] hover:bg-white/[0.1] text-slate-200 border border-white/10 hover:border-white/20',
   ghost: 'bg-transparent hover:bg-white/[0.06] text-slate-400 hover:text-slate-200',
   danger: 'bg-red-500/10 hover:bg-red-500/15 text-red-400 border border-red-500/20 hover:border-red-500/30',
-  outline: 'border border-white/10 hover:border-violet-500/30 hover:bg-violet-500/[0.08] text-slate-200 bg-transparent',
+  outline: 'border border-white/10 hover:border-crimson-500/30 hover:bg-crimson-500/[0.08] text-slate-200 bg-transparent',
 }
 
 const sizes = {
@@ -26,7 +26,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     <button
       ref={ref}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-1 focus:ring-offset-[#141432] ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-crimson-500 focus:ring-offset-1 focus:ring-offset-[#141432] ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {loading && (

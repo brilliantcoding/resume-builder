@@ -15,7 +15,7 @@ export function AIButton({ loading, label = 'AI', size = 'sm', className = '', .
       disabled={loading || props.disabled}
       className={`inline-flex items-center gap-1.5 rounded-md font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed
         ${size === 'sm' ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'}
-        bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-sm
+        bg-gradient-to-r from-crimson-600 to-crimson-700 hover:from-crimson-700 hover:to-crimson-800 text-white shadow-sm
         ${className}`}
     >
       {loading ? (

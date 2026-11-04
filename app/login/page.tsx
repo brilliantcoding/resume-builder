@@ -4,8 +4,7 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { FileText, ArrowRight, Sparkles, TrendingUp, Download } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -28,26 +27,29 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#060611]">
+    <div className="relative flex min-h-screen bg-background">
+      <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
+        <ThemeToggle />
+      </div>
       {/* Left panel — branding */}
       <div className="relative hidden overflow-hidden p-12 lg:flex lg:w-5/12 xl:w-[45%] flex-col justify-between">
         {/* Layered background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-950/70 via-[#0B0B1A] to-indigo-950/60" />
+        <div className="absolute inset-0 bg-gradient-to-br from-crimson-950/70 via-card to-amber-950/60" />
         <div className="absolute inset-0 bg-cross-pattern opacity-30" />
-        <div className="animate-orb-drift pointer-events-none absolute -right-24 -top-24 h-[500px] w-[500px] rounded-full bg-violet-600/20 blur-[120px]" />
-        <div className="animate-orb-drift-2 pointer-events-none absolute -bottom-24 -left-24 h-[400px] w-[400px] rounded-full bg-indigo-600/15 blur-[100px]" />
+        <div className="animate-orb-drift pointer-events-none absolute -right-24 -top-24 h-[500px] w-[500px] rounded-full bg-crimson-600/20 blur-[120px]" />
+        <div className="animate-orb-drift-2 pointer-events-none absolute -bottom-24 -left-24 h-[400px] w-[400px] rounded-full bg-amber-600/15 blur-[100px]" />
         {/* Right edge separator */}
-        <div className="absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-transparent via-violet-500/20 to-transparent" />
+        <div className="absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-transparent via-crimson-500/20 to-transparent" />
 
         {/* Logo top */}
         <div className="relative">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg shadow-violet-500/30">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-crimson-500 to-crimson-700 shadow-lg shadow-crimson-500/30">
               <FileText className="h-5 w-5 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent opacity-60" />
             </div>
             <span className="font-display text-lg font-bold">
-              <span className="text-slate-100">Resume</span>
+              <span className="text-primary">Resume</span>
               <span className="gradient-text">AI</span>
             </span>
           </Link>
@@ -55,26 +57,26 @@ export default function LoginPage() {
 
         {/* Center content */}
         <div className="relative max-w-sm">
-          <h2 className="font-display mb-4 text-3xl font-extrabold leading-tight text-slate-50">
+          <h2 className="font-display mb-4 text-3xl font-extrabold leading-tight text-primary">
             Build resumes that
             <span className="block gradient-text">get you hired</span>
           </h2>
-          <p className="mb-8 text-slate-400 leading-relaxed">
+          <p className="mb-8 text-secondary leading-relaxed">
             AI-powered content, 9 professional templates, and one-click PDF export — all in one place.
           </p>
 
           {/* Feature cards */}
           <div className="space-y-3">
             {[
-              { icon: Sparkles, label: 'AI generates your professional summary', color: 'text-violet-400', bg: 'bg-violet-500/10' },
+              { icon: Sparkles, label: 'AI generates your professional summary', color: 'text-crimson-400', bg: 'bg-crimson-500/10' },
               { icon: TrendingUp, label: 'Tailors resume to any job description', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-              { icon: Download, label: 'ATS-optimized — get past filters', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+              { icon: Download, label: 'ATS-optimized — get past filters', color: 'text-amber-400', bg: 'bg-amber-500/10' },
             ].map(({ icon: Icon, label, color, bg }) => (
-              <div key={label} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
+              <div key={label} className="flex items-center gap-3 rounded-xl border border-default bg-card px-4 py-3">
                 <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${bg}`}>
                   <Icon className={`h-3.5 w-3.5 ${color}`} />
                 </div>
-                <span className="text-sm text-slate-300">{label}</span>
+                <span className="text-sm text-secondary">{label}</span>
               </div>
             ))}
           </div>
@@ -82,24 +84,24 @@ export default function LoginPage() {
 
         {/* Bottom quote */}
         <div className="relative">
-          <blockquote className="border-l-2 border-violet-500/40 pl-4">
-            <p className="text-sm italic text-slate-400">&ldquo;Got 3 interviews in the first week.&rdquo;</p>
-            <footer className="mt-1 text-xs text-slate-600">— Product Designer, hired at a FAANG</footer>
+          <blockquote className="border-l-2 border-crimson-500/40 pl-4">
+            <p className="text-sm italic text-secondary">&ldquo;Got 3 interviews in the first week.&rdquo;</p>
+            <footer className="mt-1 text-xs text-muted">— Product Designer, hired at a FAANG</footer>
           </blockquote>
         </div>
       </div>
 
       {/* Right panel — form */}
-      <div className="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-8 bg-[#060611]">
+      <div className="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-8 bg-background">
         <div className="animate-scale-in w-full max-w-[400px]">
           {/* Mobile logo */}
           <div className="mb-8 text-center lg:hidden">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600">
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-crimson-500 to-crimson-700">
                 <FileText className="h-5 w-5 text-white" strokeWidth={2.2} />
               </div>
               <span className="font-display text-xl font-bold">
-                <span className="text-slate-100">Resume</span>
+                <span className="text-primary">Resume</span>
                 <span className="gradient-text">AI</span>
               </span>
             </Link>
@@ -107,15 +109,15 @@ export default function LoginPage() {
 
           {/* Form header */}
           <div className="mb-8">
-            <h1 className="font-display mb-2 text-2xl font-extrabold text-slate-50">Welcome back</h1>
-            <p className="text-slate-500 text-sm">Sign in to continue building your career</p>
+            <h1 className="font-display mb-2 text-2xl font-extrabold text-primary">Welcome back</h1>
+            <p className="text-secondary text-sm">Sign in to continue building your career</p>
           </div>
 
           {/* Form card */}
-          <div className="rounded-2xl border border-white/[0.08] bg-[#0E0E24] p-7 shadow-2xl shadow-black/40">
+          <div className="rounded-2xl border border-default bg-card p-7 shadow-2xl shadow-black/40">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted">
                   Email address
                 </label>
                 <input
@@ -124,12 +126,12 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 transition-all focus:border-violet-500/50 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+                  className="w-full rounded-xl border border-default bg-card px-4 py-2.5 text-sm text-primary placeholder-muted transition-all focus:border-crimson-500/50 focus:bg-card focus:outline-none focus:ring-2 focus:ring-crimson-500/20"
                 />
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted">
                     Password
                   </label>
                 </div>
@@ -139,7 +141,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 transition-all focus:border-violet-500/50 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+                  className="w-full rounded-xl border border-default bg-card px-4 py-2.5 text-sm text-primary placeholder-muted transition-all focus:border-crimson-500/50 focus:bg-card focus:outline-none focus:ring-2 focus:ring-crimson-500/20"
                 />
               </div>
               {error && (
@@ -167,9 +169,9 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-6 border-t border-white/[0.06] pt-5 text-center text-sm text-slate-500">
+            <div className="mt-6 border-t border-default pt-5 text-center text-sm text-muted">
               No account?{' '}
-              <Link href="/register" className="font-semibold text-violet-400 transition-colors hover:text-violet-300">
+              <Link href="/register" className="font-semibold text-crimson-400 transition-colors hover:text-crimson-300">
                 Create one free →
               </Link>
             </div>
@@ -177,7 +179,7 @@ export default function LoginPage() {
 
           {/* Back to home */}
           <div className="mt-6 text-center">
-            <Link href="/" className="text-xs text-slate-600 transition-colors hover:text-slate-400">
+            <Link href="/" className="text-xs text-muted transition-colors hover:text-secondary">
               ← Back to ResumeAI
             </Link>
           </div>

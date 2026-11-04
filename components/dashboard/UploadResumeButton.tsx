@@ -145,10 +145,10 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
   const trigger = asCard ? (
     <button
       onClick={openModal}
-      className="group flex h-full min-h-[200px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/[0.08] transition-all hover:border-violet-500/30 hover:bg-violet-500/[0.04]"
+      className="group flex h-full min-h-[200px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/[0.08] transition-all hover:border-crimson-500/30 hover:bg-crimson-500/[0.04]"
     >
-      <Upload className="mb-2 h-10 w-10 text-slate-600 transition-colors group-hover:text-violet-400" />
-      <span className="text-sm font-medium text-slate-500 transition-colors group-hover:text-violet-300">Upload Resume</span>
+      <Upload className="mb-2 h-10 w-10 text-slate-600 transition-colors group-hover:text-crimson-400" />
+      <span className="text-sm font-medium text-slate-500 transition-colors group-hover:text-crimson-300">Upload Resume</span>
       <span className="mt-1 text-xs text-slate-600">PDF · DOCX · TXT</span>
     </button>
   ) : (
@@ -191,12 +191,12 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                     onClick={() => inputRef.current?.click()}
                     className={`cursor-pointer rounded-xl border-2 border-dashed p-10 text-center transition-all ${
                       stage === 'dragging'
-                        ? 'border-violet-500/60 bg-violet-500/[0.08]'
-                        : 'border-white/[0.08] hover:border-violet-500/30 hover:bg-violet-500/[0.04]'
+                        ? 'border-crimson-500/60 bg-crimson-500/[0.08]'
+                        : 'border-white/[0.08] hover:border-crimson-500/30 hover:bg-crimson-500/[0.04]'
                     }`}
                   >
-                    <div className={`mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${stage === 'dragging' ? 'bg-violet-500/20' : 'bg-white/[0.06]'}`}>
-                      <FileUp className={`h-8 w-8 ${stage === 'dragging' ? 'text-violet-400' : 'text-slate-500'}`} />
+                    <div className={`mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${stage === 'dragging' ? 'bg-crimson-500/20' : 'bg-white/[0.06]'}`}>
+                      <FileUp className={`h-8 w-8 ${stage === 'dragging' ? 'text-crimson-400' : 'text-slate-500'}`} />
                     </div>
                     <p className="mb-1 text-base font-medium text-slate-200">
                       {stage === 'dragging' ? 'Drop it here!' : 'Drag & drop your resume'}
@@ -229,8 +229,8 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                 <div className="space-y-5">
                   {/* File info pill */}
                   <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-violet-500/15">
-                      <FileText className="h-4.5 w-4.5 text-violet-400" />
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-crimson-500/15">
+                      <FileText className="h-4.5 w-4.5 text-crimson-400" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-slate-200">{fileName}</p>
@@ -249,7 +249,7 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                       </div>
                       <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.07]">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-200"
+                          className="h-full rounded-full bg-gradient-to-r from-crimson-500 to-amber-500 transition-all duration-200"
                           style={{ width: `${uploadPct}%` }}
                         />
                       </div>
@@ -267,7 +267,7 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                         <div
                           key={step.key}
                           className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 transition-all duration-300 ${
-                            active  ? 'border border-violet-500/25 bg-violet-500/[0.08]' :
+                            active  ? 'border border-crimson-500/25 bg-crimson-500/[0.08]' :
                             done    ? 'border border-emerald-500/15 bg-emerald-500/[0.05]' :
                                       'border border-white/[0.04] bg-white/[0.02] opacity-40'
                           }`}
@@ -275,7 +275,7 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                           {/* Status icon */}
                           <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
                             done   ? 'bg-emerald-500/20' :
-                            active ? 'bg-violet-500/20' :
+                            active ? 'bg-crimson-500/20' :
                                      'bg-white/[0.06]'
                           }`}>
                             {done ? (
@@ -286,7 +286,7 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                                 {[0, 1, 2].map(j => (
                                   <span
                                     key={j}
-                                    className="h-1 w-1 rounded-full bg-violet-400"
+                                    className="h-1 w-1 rounded-full bg-crimson-400"
                                     style={{ animation: `bounce 1.2s ease-in-out ${j * 0.2}s infinite` }}
                                   />
                                 ))}
@@ -308,8 +308,8 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                           {/* Active pulse indicator */}
                           {active && (
                             <span className="flex h-2 w-2 flex-shrink-0">
-                              <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-violet-400 opacity-60" />
-                              <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500" />
+                              <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-crimson-400 opacity-60" />
+                              <span className="relative inline-flex h-2 w-2 rounded-full bg-crimson-500" />
                             </span>
                           )}
                         </div>
@@ -319,9 +319,9 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
 
                   {/* AI badge shown during parse step */}
                   {activeStep === 'parse' && (
-                    <div className="flex items-center gap-2 rounded-lg border border-violet-500/20 bg-violet-500/[0.06] px-3.5 py-2.5">
-                      <Sparkles className="h-3.5 w-3.5 flex-shrink-0 text-violet-400" />
-                      <p className="text-xs text-violet-300">
+                    <div className="flex items-center gap-2 rounded-lg border border-crimson-500/20 bg-crimson-500/[0.06] px-3.5 py-2.5">
+                      <Sparkles className="h-3.5 w-3.5 flex-shrink-0 text-crimson-400" />
+                      <p className="text-xs text-crimson-300">
                         DeepSeek AI is structuring your resume data — this usually takes 5–15 seconds
                       </p>
                     </div>

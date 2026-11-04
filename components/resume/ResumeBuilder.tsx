@@ -16,6 +16,7 @@ import { TailorModal } from './TailorModal'
 import { ATSScorePanel } from './ATSScorePanel'
 import { Save, Download, Eye, EyeOff, Sparkles, ChevronDown, ChevronRight, Check, TrendingUp } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
+import { addAssistantEventListener, type AssistantEventDetail } from '@/components/ui/assistantEvents'
 
 interface Props {
   resumeId: string
@@ -67,10 +68,10 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
     saveTimer.current = setTimeout(() => save(d, t, ti), 1500)
   }, [save])
 
-  const updateData = (newData: ResumeData) => {
+  const updateData = useCallback((newData: ResumeData) => {
     setData(newData)
     triggerAutoSave(newData, template, title)
-  }
+  }, [template, title, triggerAutoSave])
 
   const updateTemplate = (t: TemplateId) => {
     setTemplate(t)
@@ -81,6 +82,113 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
     setTitle(t)
     triggerAutoSave(data, template, t)
   }
+
+  useEffect(() => addAssistantEventListener((event) => {
+    event.preventDefault()
+    const detail: AssistantEventDetail = event.detail
+
+    async function handleAction() {
+      try {
+        if (detail.type === 'apply') {
+          const suggestion = detail.suggestion
+          if (suggestion.type === 'summary') {
+            updateData({ ...data, summary: suggestion.text })
+            setActiveSection('summary')
+          } else {
+            const experience = data.experience.map((entry) =>
+              entry.id === suggestion.experienceId
+                ? {
+                    ...entry,
+                    bullets: entry.bullets.map((bullet, index) =>
+                      index === suggestion.bulletIndex ? suggestion.text : bullet,
+                    ),
+                  }
+                : entry,
+            )
+            updateData({ ...data, experience })
+            setActiveSection('experience')
+          }
+          detail.respond({ message: 'Suggestion applied. Your resume will save automatically.' })
+          return
+        }
+
+        if (detail.action === 'tailor-resume') {
+          setShowTailor(true)
+          detail.respond({ message: 'The job tailoring dialog is open. Paste a job description to get a tailored summary and keyword suggestions.' })
+          return
+        }
+
+        if (detail.action === 'check-ats') {
+          setShowATS(true)
+          detail.respond({ message: 'ATS readiness is open above the editor. Review its suggestions to see which sections could use attention.' })
+          return
+        }
+
+        if (detail.action === 'generate-summary') {
+          const experience = data.experience
+            .map((entry) => `${entry.position}${entry.company ? ` at ${entry.company}` : ''}: ${entry.bullets.filter(Boolean).join('; ')}`)
+            .filter(Boolean)
+            .join('\n')
+          const skills = data.skills.flatMap((group) => group.skills).join(', ')
+          const response = await fetch('/api/ai/summary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jobTitle: data.personalInfo.jobTitle,
+              experience: experience || 'Not provided',
+              skills: skills || 'Not provided',
+            }),
+          })
+          const result: { summary?: string; error?: string } = await response.json()
+          if (!response.ok || !result.summary?.trim()) {
+            throw new Error(result.error || 'Could not generate a summary. Please try again.')
+          }
+          detail.respond({
+            message: 'Review this summary. Apply it only if it accurately reflects your experience.',
+            suggestion: { type: 'summary', text: result.summary },
+          })
+          return
+        }
+
+        const experienceIndex = data.experience.findIndex((entry) => entry.bullets.some((bullet) => bullet.trim()))
+        if (experienceIndex === -1) {
+          detail.respond({ message: 'Add an experience entry with a bullet point first, then I can help improve it.' })
+          return
+        }
+
+        const entry = data.experience[experienceIndex]
+        const bulletIndex = entry.bullets.findIndex((bullet) => bullet.trim())
+        const response = await fetch('/api/ai/improve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bullet: entry.bullets[bulletIndex],
+            jobTitle: entry.position || data.personalInfo.jobTitle,
+          }),
+        })
+        const result: { improved?: string; error?: string } = await response.json()
+        if (!response.ok || !result.improved?.trim()) {
+          throw new Error(result.error || 'Could not improve this bullet. Please try again.')
+        }
+        detail.respond({
+          message: 'Review this rewrite before applying it. Confirm every claim and metric is accurate.',
+          suggestion: {
+            type: 'bullet',
+            text: result.improved,
+            experienceId: entry.id,
+            bulletIndex,
+          },
+        })
+      } catch (error) {
+        console.error('Resume assistant action failed:', error)
+        detail.respond({
+          message: error instanceof Error ? error.message : 'The assistant action failed. Please try again.',
+        })
+      }
+    }
+
+    void handleAction()
+  }), [data, updateData])
 
   async function exportPDF() {
     setExporting(true)
@@ -107,6 +215,7 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
       {showTailor && (
         <TailorModal
           currentSummary={data.summary}
+          currentSkills={data.skills.flatMap((group) => group.skills).join(', ')}
           onClose={() => setShowTailor(false)}
           onApply={(summary) => {
             updateData({ ...data, summary })
@@ -116,15 +225,15 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
         />
       )}
 
-      <div className="flex-1 bg-[#06060F]">
+      <div className="flex-1 bg-background">
         {/* Top bar */}
-        <div className="border-b border-white/[0.06] bg-[#0D0D20] px-4 py-3">
+        <div className="border-b border-white/[0.06] bg-card px-4 py-3">
           <div className="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <Input
                 value={title}
                 onChange={(e) => updateTitle(e.target.value)}
-                className="max-w-xs rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 font-semibold text-slate-100 focus:border-violet-500"
+                className="max-w-xs rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 font-semibold text-slate-100 focus:border-crimson-500"
               />
               <span className="hidden text-xs text-slate-500 sm:block">
                 {saving ? 'Saving...' : saved ? (
@@ -135,7 +244,7 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
 
             <div className="flex flex-shrink-0 items-center gap-2">
               <Button variant="ghost" size="sm" onClick={() => setShowTailor(true)}>
-                <Sparkles className="h-4 w-4 text-violet-400" />
+                <Sparkles className="h-4 w-4 text-crimson-400" />
                 <span className="hidden sm:inline">Tailor to Job</span>
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setShowATS(!showATS)}>
@@ -160,7 +269,7 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
 
         <div className="mx-auto max-w-screen-2xl px-4 py-6">
           {/* Template Picker */}
-          <div className="mb-6 rounded-xl border border-white/[0.07] bg-[#141432] p-4">
+          <div className="mb-6 rounded-xl border border-white/[0.07] bg-card p-4">
             <p className="mb-3 text-sm font-medium text-slate-400">Template</p>
             <TemplatePicker value={template} onChange={updateTemplate} />
           </div>
@@ -182,7 +291,7 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
             {/* Form */}
             <div className="space-y-3">
               {sections.map((section) => (
-                <div key={section.id} className="overflow-hidden rounded-xl border border-white/[0.07] bg-[#141432]">
+                <div key={section.id} className="overflow-hidden rounded-xl border border-white/[0.07] bg-card">
                   <button
                     type="button"
                     className="flex w-full items-center justify-between px-5 py-4 transition-colors hover:bg-white/[0.03]"
@@ -228,7 +337,7 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
             {/* Preview */}
             {showPreview && (
               <div className="sticky top-20 self-start">
-                <div className="rounded-xl border border-white/[0.07] bg-[#141432] p-4">
+                <div className="rounded-xl border border-white/[0.07] bg-card p-4">
                   <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Live Preview</p>
                   <div className="max-h-[calc(100vh-180px)] overflow-auto">
                     <ResumePreview data={data} template={template} />

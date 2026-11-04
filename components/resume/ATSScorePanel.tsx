@@ -24,7 +24,7 @@ function CircularGauge({ score, grade }: { score: number; grade: ATSResult['grad
 
   const trackColor = '#1E1E3A'
   const fillColor =
-    grade === 'excellent' ? '#7C3AED' :
+    grade === 'excellent' ? '#DC2626' :
     grade === 'good'      ? '#059669' :
     grade === 'fair'      ? '#D97706' :
                             '#DC2626'
@@ -37,7 +37,7 @@ function CircularGauge({ score, grade }: { score: number; grade: ATSResult['grad
   }[grade]
 
   const gradeColor = {
-    excellent: 'text-violet-400',
+    excellent: 'text-crimson-400',
     good: 'text-emerald-400',
     fair: 'text-amber-400',
     poor: 'text-red-400',
@@ -89,7 +89,7 @@ function CategoryRow({ cat, onSectionClick }: { cat: ScoreCategory; onSectionCli
   const pct = cat.max > 0 ? (cat.score / cat.max) * 100 : 0
 
   const barColor =
-    pct >= 80 ? 'from-violet-500 to-indigo-500' :
+    pct >= 80 ? 'from-crimson-500 to-amber-500' :
     pct >= 60 ? 'from-emerald-500 to-teal-500' :
     pct >= 40 ? 'from-amber-500 to-orange-500' :
                 'from-red-500 to-rose-500'
@@ -143,7 +143,7 @@ function CategoryRow({ cat, onSectionClick }: { cat: ScoreCategory; onSectionCli
             <button
               type="button"
               onClick={() => onSectionClick(sectionMap[cat.id])}
-              className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-violet-400 hover:text-violet-300 transition-colors"
+              className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-crimson-400 hover:text-crimson-300 transition-colors"
             >
               Go to {cat.label} section
               <ArrowRight className="h-3 w-3" />
@@ -168,12 +168,12 @@ export function ATSScorePanel({ data, onSectionClick }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-white/[0.07] bg-[#141432] overflow-hidden">
+    <div className="rounded-xl border border-white/[0.07] bg-card overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600/40 to-indigo-600/30">
-            <svg className="h-3.5 w-3.5 text-violet-300" viewBox="0 0 16 16" fill="currentColor">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-crimson-600/40 to-amber-600/30">
+            <svg className="h-3.5 w-3.5 text-crimson-300" viewBox="0 0 16 16" fill="currentColor">
               <path d="M8 1a7 7 0 100 14A7 7 0 008 1zM0 8a8 8 0 1116 0A8 8 0 010 8z"/>
               <path d="M8 4a.75.75 0 01.75.75v3.5l2 1.15a.75.75 0 01-.75 1.3l-2.25-1.3A.75.75 0 017.25 8.75v-4A.75.75 0 018 4z"/>
             </svg>
@@ -192,7 +192,7 @@ export function ATSScorePanel({ data, onSectionClick }: Props) {
 
       {/* Info accordion */}
       {showInfo && (
-        <div className="border-b border-white/[0.06] bg-slate-900/40 px-5 py-3.5 text-[12px] leading-relaxed text-slate-400">
+        <div className="border-b border-white/[0.06] bg-card px-5 py-3.5 text-[12px] leading-relaxed text-slate-400">
           <p className="mb-1.5 font-semibold text-slate-300">Applicant Tracking System (ATS)</p>
           <p>
             Most companies use software to automatically scan and rank resumes before a human ever reads them.
@@ -216,7 +216,7 @@ export function ATSScorePanel({ data, onSectionClick }: Props) {
             {result.categories.map((cat) => {
               const pct = cat.max > 0 ? Math.round((cat.score / cat.max) * 100) : 0
               const dotColor =
-                pct >= 80 ? 'bg-violet-400' :
+                pct >= 80 ? 'bg-crimson-400' :
                 pct >= 60 ? 'bg-emerald-400' :
                 pct >= 40 ? 'bg-amber-400' :
                             'bg-red-400'
@@ -258,7 +258,7 @@ export function ATSScorePanel({ data, onSectionClick }: Props) {
                       <button
                         type="button"
                         onClick={() => onSectionClick(s.section)}
-                        className="mt-1 text-[10px] font-medium text-violet-400 hover:text-violet-300 transition-colors"
+                        className="mt-1 text-[10px] font-medium text-crimson-400 hover:text-crimson-300 transition-colors"
                       >
                         Fix in {s.section} →
                       </button>

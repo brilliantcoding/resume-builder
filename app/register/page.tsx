@@ -4,6 +4,7 @@ import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { FileText, ArrowRight, CheckCircle, Sparkles, Layout, Download, Zap } from 'lucide-react'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -35,19 +36,22 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#060611]">
+    <div className="relative flex min-h-screen bg-background">
+      <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
+        <ThemeToggle />
+      </div>
       {/* Left panel — branding */}
       <div className="relative hidden overflow-hidden p-12 lg:flex lg:w-5/12 xl:w-[45%] flex-col justify-between">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/70 via-[#0B0B1A] to-violet-950/60" />
+        <div className="absolute inset-0 bg-gradient-to-br from-crimson-950/70 via-card to-amber-950/60" />
         <div className="absolute inset-0 bg-cross-pattern opacity-30" />
-        <div className="animate-orb-drift pointer-events-none absolute -right-24 -top-24 h-[500px] w-[500px] rounded-full bg-indigo-600/20 blur-[120px]" />
-        <div className="animate-orb-drift-2 pointer-events-none absolute -bottom-24 -left-24 h-[400px] w-[400px] rounded-full bg-violet-600/15 blur-[100px]" />
-        <div className="absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-transparent via-indigo-500/20 to-transparent" />
+        <div className="animate-orb-drift pointer-events-none absolute -right-24 -top-24 h-[500px] w-[500px] rounded-full bg-crimson-600/20 blur-[120px]" />
+        <div className="animate-orb-drift-2 pointer-events-none absolute -bottom-24 -left-24 h-[400px] w-[400px] rounded-full bg-amber-600/15 blur-[100px]" />
+        <div className="absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-transparent via-crimson-500/20 to-transparent" />
 
         {/* Logo top */}
         <div className="relative">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-crimson-500 to-crimson-700 shadow-lg shadow-crimson-500/30">
               <FileText className="h-5 w-5 text-white" strokeWidth={2.2} />
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent opacity-60" />
             </div>
@@ -72,9 +76,9 @@ export default function RegisterPage() {
           <div className="grid grid-cols-2 gap-3">
             {[
               { icon: CheckCircle, label: 'Free forever', sub: 'No credit card', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-              { icon: Layout, label: '9 templates', sub: 'All ATS-ready', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-              { icon: Sparkles, label: 'AI writes it', sub: 'Zero effort', color: 'text-violet-400', bg: 'bg-violet-500/10' },
-              { icon: Download, label: 'PDF export', sub: 'One click', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+              { icon: Layout, label: '9 templates', sub: 'All ATS-ready', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+              { icon: Sparkles, label: 'AI writes it', sub: 'Zero effort', color: 'text-crimson-400', bg: 'bg-crimson-500/10' },
+              { icon: Download, label: 'PDF export', sub: 'One click', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
             ].map(({ icon: Icon, label, sub, color, bg }) => (
               <div key={label} className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-3.5">
                 <div className={`mb-2 inline-flex h-7 w-7 items-center justify-center rounded-lg ${bg}`}>
@@ -100,16 +104,16 @@ export default function RegisterPage() {
       </div>
 
       {/* Right panel — form */}
-      <div className="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-8 bg-[#060611]">
+      <div className="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-8 bg-background">
         <div className="animate-scale-in w-full max-w-[400px]">
           {/* Mobile logo */}
           <div className="mb-8 text-center lg:hidden">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600">
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-crimson-500 to-crimson-700">
                 <FileText className="h-5 w-5 text-white" strokeWidth={2.2} />
               </div>
               <span className="font-display text-xl font-bold">
-                <span className="text-slate-100">Resume</span>
+                <span className="text-primary">Resume</span>
                 <span className="gradient-text">AI</span>
               </span>
             </Link>
@@ -117,15 +121,15 @@ export default function RegisterPage() {
 
           {/* Form header */}
           <div className="mb-8">
-            <h1 className="font-display mb-2 text-2xl font-extrabold text-slate-50">Create your account</h1>
-            <p className="text-slate-500 text-sm">Free forever. No credit card required.</p>
+            <h1 className="font-display mb-2 text-2xl font-extrabold text-primary">Create your account</h1>
+            <p className="text-secondary text-sm">Free forever. No credit card required.</p>
           </div>
 
           {/* Form card */}
-          <div className="rounded-2xl border border-white/[0.08] bg-[#0E0E24] p-7 shadow-2xl shadow-black/40">
+          <div className="rounded-2xl border border-default bg-card p-7 shadow-2xl shadow-black/40">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted">
                   Full name
                 </label>
                 <input
@@ -133,7 +137,7 @@ export default function RegisterPage() {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Jane Smith"
-                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 transition-all focus:border-violet-500/50 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 transition-all focus:border-crimson-500/50 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-crimson-500/20"
                 />
               </div>
               <div className="space-y-1.5">
@@ -146,7 +150,7 @@ export default function RegisterPage() {
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="you@example.com"
                   required
-                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 transition-all focus:border-violet-500/50 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 transition-all focus:border-crimson-500/50 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-crimson-500/20"
                 />
               </div>
               <div className="space-y-1.5">
@@ -159,7 +163,7 @@ export default function RegisterPage() {
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="At least 8 characters"
                   required
-                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 transition-all focus:border-violet-500/50 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 transition-all focus:border-crimson-500/50 focus:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-crimson-500/20"
                 />
               </div>
               {error && (
@@ -189,7 +193,7 @@ export default function RegisterPage() {
 
             <div className="mt-6 border-t border-white/[0.06] pt-5 text-center text-sm text-slate-500">
               Already have an account?{' '}
-              <Link href="/login" className="font-semibold text-violet-400 transition-colors hover:text-violet-300">
+              <Link href="/login" className="font-semibold text-crimson-400 transition-colors hover:text-crimson-300">
                 Sign in →
               </Link>
             </div>
@@ -197,8 +201,9 @@ export default function RegisterPage() {
 
           {/* Back to home */}
           <div className="mt-6 text-center">
-            <Link href="/" className="text-xs text-slate-600 transition-colors hover:text-slate-400">
-              ← Back to ResumeAI
+            <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300">
+              <span className="inline-block rotate-180 transform">←</span>
+              Back to home
             </Link>
           </div>
         </div>

@@ -8,24 +8,31 @@ interface Props {
   onClose: () => void
   onApply: (summary: string, keywords: string[]) => void
   currentSummary: string
+  currentSkills: string
 }
 
-export function TailorModal({ onClose, onApply, currentSummary }: Props) {
+export function TailorModal({ onClose, onApply, currentSummary, currentSkills }: Props) {
   const [jobDescription, setJobDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{ summary: string; keywords: string[] } | null>(null)
+  const [error, setError] = useState('')
 
   async function analyze() {
     if (!jobDescription.trim()) return
     setLoading(true)
+    setError('')
     try {
       const res = await fetch('/api/ai/tailor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobDescription, currentSummary }),
+        body: JSON.stringify({ jobDescription, currentSummary, currentSkills }),
       })
-      const data = await res.json()
-      setResult({ summary: data.summary || '', keywords: data.keywords || [] })
+      const data: { summary?: string; keywords?: string[]; error?: string } = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not tailor this resume. Please try again.')
+      if (!data.summary?.trim()) throw new Error('The AI did not return a tailored summary. Please try again.')
+      setResult({ summary: data.summary, keywords: data.keywords || [] })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not tailor this resume. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -36,7 +43,7 @@ export function TailorModal({ onClose, onApply, currentSummary }: Props) {
       <div className="glass-strong w-full max-w-2xl overflow-auto rounded-2xl border border-white/[0.08] shadow-2xl max-h-[90vh]">
         <div className="flex items-center justify-between border-b border-white/[0.06] p-6">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-violet-400" />
+            <Sparkles className="h-5 w-5 text-crimson-400" />
             <h2 className="font-display text-xl font-bold text-slate-100">Tailor Resume to Job</h2>
           </div>
           <button onClick={onClose} className="rounded-lg p-1 text-slate-500 transition-colors hover:bg-white/[0.06] hover:text-slate-200">
@@ -60,11 +67,17 @@ export function TailorModal({ onClose, onApply, currentSummary }: Props) {
             Analyze & Generate
           </Button>
 
+          {error && (
+            <p className="rounded-lg border border-red-500/20 bg-red-500/[0.06] px-4 py-3 text-sm text-red-500" role="alert">
+              {error}
+            </p>
+          )}
+
           {result && (
             <div className="space-y-4 border-t border-white/[0.06] pt-5">
               <div>
                 <h3 className="mb-2 text-sm font-semibold text-slate-200">Tailored Summary</h3>
-                <div className="rounded-lg border border-violet-500/20 bg-violet-500/[0.08] p-4 text-sm text-slate-300">
+                <div className="rounded-lg border border-crimson-500/20 bg-crimson-500/[0.08] p-4 text-sm text-slate-300">
                   {result.summary}
                 </div>
               </div>

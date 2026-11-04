@@ -82,9 +82,9 @@ export function SkillsSection({ groups, jobTitle, onChange }: Props) {
 
           <div className="flex flex-wrap gap-2">
             {group.skills.map((skill, idx) => (
-              <span key={idx} className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-sm px-3 py-1 rounded-full">
+              <span key={idx} className="inline-flex items-center gap-1 bg-crimson-500/10 text-crimson-300 border border-crimson-500/20 text-sm px-3 py-1 rounded-full">
                 {skill}
-                <button type="button" onClick={() => removeSkill(group.id, idx)} className="hover:text-indigo-900">
+                <button type="button" onClick={() => removeSkill(group.id, idx)} className="hover:text-crimson-400">
                   <X className="h-3 w-3" />
                 </button>
               </span>

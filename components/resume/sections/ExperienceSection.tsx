@@ -106,7 +106,7 @@ export function ExperienceSection({ entries, onChange }: Props) {
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <label className="text-sm font-medium text-slate-300">Bullet Points</label>
-                  <button type="button" onClick={() => addBullet(entry.id)} className="flex items-center gap-1 text-xs text-violet-400 hover:underline">
+                  <button type="button" onClick={() => addBullet(entry.id)} className="flex items-center gap-1 text-xs text-crimson-400 hover:underline">
                     <Plus className="h-3 w-3" /> Add bullet
                   </button>
                 </div>
@@ -119,7 +119,7 @@ export function ExperienceSection({ entries, onChange }: Props) {
                         onChange={(e) => updateBullet(entry.id, idx, e.target.value)}
                         placeholder="Developed a feature that increased performance by 40%..."
                         rows={2}
-                        className="flex-1 resize-none rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                        className="flex-1 resize-none rounded-lg border border-white/10 bg-white/[0.05] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-crimson-500"
                       />
                       <div className="flex flex-col gap-1 mt-1">
                         <button
@@ -127,7 +127,7 @@ export function ExperienceSection({ entries, onChange }: Props) {
                           title="Improve with AI"
                           onClick={() => improveBullet(entry.id, idx, bullet)}
                           disabled={!bullet || improvingBullet === `${entry.id}-${idx}`}
-                          className="p-1 rounded text-violet-500 hover:text-violet-700 disabled:opacity-40"
+                          className="p-1 rounded text-crimson-500 hover:text-crimson-700 disabled:opacity-40"
                         >
                           {improvingBullet === `${entry.id}-${idx}` ? (
                             <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">

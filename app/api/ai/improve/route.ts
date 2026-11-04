@@ -14,7 +14,8 @@ Original bullet: ${bullet}
 
 Requirements:
 - Start with a strong action verb
-- Include metrics/numbers where possible (estimate if needed)
+- Preserve the original facts; never invent metrics, numbers, or outcomes
+- If no metrics are provided, improve the wording without adding them
 - Be specific and concise (under 15 words)
 - Return ONLY the improved bullet point, no quotes or explanations`
 

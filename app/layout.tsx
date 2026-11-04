@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Syne, DM_Sans } from 'next/font/google'
 import './globals.css'
 import { SessionProvider } from 'next-auth/react'
+import { FloatingAIAssistant } from '@/components/ui/AIAssistant'
+import { ThemeProvider } from '@/components/ui/ThemeProvider'
 
 const syne = Syne({
   subsets: ['latin'],
@@ -24,9 +26,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${syne.variable} ${dmSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-[#06060F] text-slate-100">
-        <SessionProvider>{children}</SessionProvider>
+    <html lang="en" data-theme="light" suppressHydrationWarning className={`${syne.variable} ${dmSans.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-background text-primary">
+        <ThemeProvider>
+          <SessionProvider>{children}</SessionProvider>
+          <FloatingAIAssistant />
+        </ThemeProvider>
       </body>
     </html>
   )
