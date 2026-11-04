@@ -379,6 +379,146 @@ function PDFCompact({ data }: { data: ResumeData }) {
   )
 }
 
+type PDFVariantTemplate = Exclude<TemplateId, 'modern' | 'classic' | 'professional' | 'executive' | 'timeline' | 'elegant' | 'compact'>
+
+const pdfVariants: Record<PDFVariantTemplate, {
+  accent: string
+  layout: 'banner' | 'centered' | 'minimal' | 'sidebar'
+  serif?: boolean
+  compact?: boolean
+}> = {
+  minimal: { accent: '#334155', layout: 'minimal', compact: true },
+  creative: { accent: '#0f766e', layout: 'banner' },
+  altacv: { accent: '#6d28d9', layout: 'sidebar' },
+  jakes: { accent: '#111827', layout: 'centered', compact: true },
+  sixtyseconds: { accent: '#047857', layout: 'sidebar', compact: true },
+  berlin: { accent: '#155e75', layout: 'banner', compact: true },
+  tokyo: { accent: '#be123c', layout: 'centered' },
+  vienna: { accent: '#78350f', layout: 'minimal', serif: true },
+}
+
+function PDFVariant({ data, template }: { data: ResumeData; template: PDFVariantTemplate }) {
+  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
+  const variant = pdfVariants[template]
+  const font = variant.serif ? 'Times-Roman' : 'Helvetica'
+  const boldFont = variant.serif ? 'Times-Bold' : 'Helvetica-Bold'
+  const section = (name: string) => (
+    <Text style={{
+      fontSize: variant.compact ? 9 : 10,
+      fontFamily: boldFont,
+      color: variant.accent,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      borderBottomWidth: variant.layout === 'minimal' ? 0.5 : 1.5,
+      borderBottomColor: variant.accent,
+      paddingBottom: 3,
+      marginBottom: 7,
+      marginTop: variant.compact ? 10 : 14,
+    }}>{name}</Text>
+  )
+
+  const contact = [p.email, p.phone, p.location, p.website, p.linkedin, p.github].filter(Boolean)
+  const skillsSection = skills.length > 0 ? (
+    <View>{section('Skills')}{skills.map((group, i) => (
+      <View key={i} style={{ marginBottom: 6 }}>
+        {group.category ? <Text style={{ fontFamily: boldFont, fontSize: 8, marginBottom: 2 }}>{group.category}</Text> : null}
+        <Text style={{ fontSize: 8 }}>{group.skills.join(', ')}</Text>
+      </View>
+    ))}</View>
+  ) : null
+  const educationSection = education.length > 0 ? (
+    <View>{section('Education')}{education.map((entry, i) => (
+      <View key={i} style={{ marginBottom: 7 }}>
+        <Text style={{ fontFamily: boldFont, fontSize: 8.5 }}>{entry.institution}</Text>
+        <Text style={{ fontSize: 8 }}>{entry.degree}{entry.field ? ` in ${entry.field}` : ''}</Text>
+        <Text style={{ fontSize: 7.5, color: '#64748b' }}>{entry.startDate}{entry.startDate && entry.endDate ? ' – ' : ''}{entry.endDate}</Text>
+      </View>
+    ))}</View>
+  ) : null
+  const certificationsSection = certifications.length > 0 ? (
+    <View>{section('Certifications')}{certifications.map((entry, i) => (
+      <View key={i} style={{ marginBottom: 6 }}>
+        <Text style={{ fontFamily: boldFont, fontSize: 8 }}>{entry.name}</Text>
+        <Text style={{ fontSize: 7.5, color: '#64748b' }}>{entry.issuer}{entry.date ? ` · ${entry.date}` : ''}</Text>
+      </View>
+    ))}</View>
+  ) : null
+  const mainContent = (
+    <View style={variant.layout === 'sidebar' ? { flex: 1, padding: 22 } : { padding: 28 }}>
+      {summary ? <View>{section('Profile')}<Text style={{ fontSize: 8.5, lineHeight: 1.5 }}>{summary}</Text></View> : null}
+      {experience.length > 0 ? <View>{section('Experience')}{experience.map((entry, i) => (
+        <View key={i} style={{ marginBottom: variant.compact ? 7 : 10 }}>
+          <View style={styles.row}>
+            <Text style={{ fontFamily: boldFont, fontSize: 9 }}>{entry.position}</Text>
+            <Text style={styles.muted}>{entry.startDate}{entry.startDate ? ' – ' : ''}{entry.current ? 'Present' : entry.endDate}</Text>
+          </View>
+          <Text style={{ color: variant.accent, fontSize: 8, marginBottom: 3 }}>{entry.company}</Text>
+          {entry.bullets.filter((bullet) => bullet.trim()).map((bullet, j) => (
+            <Text key={j} style={{ fontSize: 8, marginBottom: 2, paddingLeft: 7 }}>• {bullet}</Text>
+          ))}
+        </View>
+      ))}</View> : null}
+      {variant.layout !== 'sidebar' ? <>{educationSection}{skillsSection}</> : null}
+      {projects.length > 0 ? <View>{section('Projects')}{projects.map((entry, i) => (
+        <View key={i} style={{ marginBottom: 7 }}>
+          <View style={styles.row}>
+            <Text style={{ fontFamily: boldFont, fontSize: 8.5 }}>{entry.name}</Text>
+            {entry.technologies.length > 0 ? <Text style={styles.muted}>{entry.technologies.join(', ')}</Text> : null}
+          </View>
+          <Text style={{ fontSize: 8 }}>{entry.description}</Text>
+        </View>
+      ))}</View> : null}
+      {variant.layout !== 'sidebar' ? certificationsSection : null}
+    </View>
+  )
+
+  return (
+    <Document>
+      <Page size="A4" style={[styles.page, { padding: 0, fontFamily: font }]}>
+        {variant.layout === 'sidebar' ? (
+          <View style={{ flex: 1, flexDirection: 'row' }}>
+            <View style={{ width: 170, padding: 18, backgroundColor: '#f1f5f9', borderRightWidth: 3, borderRightColor: variant.accent }}>
+              <Text style={{ fontFamily: boldFont, fontSize: 15, color: variant.accent, marginBottom: 4 }}>{p.fullName || 'Your Name'}</Text>
+              {p.jobTitle ? <Text style={{ fontSize: 8, marginBottom: 8 }}>{p.jobTitle}</Text> : null}
+              {contact.map((item, i) => <Text key={i} style={{ fontSize: 7, marginBottom: 3, color: '#475569' }}>{item}</Text>)}
+              {skillsSection}
+              {educationSection}
+              {certificationsSection}
+            </View>
+            {mainContent}
+          </View>
+        ) : (
+          <>
+            <View style={{
+              paddingTop: variant.layout === 'banner' ? 22 : 26,
+              paddingBottom: variant.layout === 'banner' ? 18 : 12,
+              paddingLeft: 28,
+              paddingRight: 28,
+              backgroundColor: variant.layout === 'banner' ? variant.accent : 'white',
+              borderBottomWidth: variant.layout === 'minimal' || variant.layout === 'centered' ? 1 : 0,
+              borderBottomColor: variant.accent,
+              alignItems: variant.layout === 'centered' ? 'center' : 'flex-start',
+            }}>
+              <Text style={{
+                fontSize: variant.compact ? 18 : 21,
+                fontFamily: boldFont,
+                color: variant.layout === 'banner' ? 'white' : variant.accent,
+                marginBottom: 3,
+                textAlign: variant.layout === 'centered' ? 'center' : 'left',
+              }}>{p.fullName || 'Your Name'}</Text>
+              {p.jobTitle ? <Text style={{ fontSize: 9, color: variant.layout === 'banner' ? '#e2e8f0' : '#475569', textAlign: variant.layout === 'centered' ? 'center' : 'left' }}>{p.jobTitle}</Text> : null}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 6, justifyContent: variant.layout === 'centered' ? 'center' : 'flex-start' }}>
+                {contact.map((item, i) => <Text key={i} style={{ fontSize: 7.5, color: variant.layout === 'banner' ? '#f8fafc' : '#64748b' }}>{item}</Text>)}
+              </View>
+            </View>
+            {mainContent}
+          </>
+        )}
+      </Page>
+    </Document>
+  )
+}
+
 export function buildPDFDocument(data: ResumeData, template: TemplateId) {
   if (template === 'classic') return <PDFClassic data={data} />
   if (template === 'professional') return <PDFProfessional data={data} />
@@ -386,5 +526,6 @@ export function buildPDFDocument(data: ResumeData, template: TemplateId) {
   if (template === 'timeline') return <PDFTimeline data={data} />
   if (template === 'elegant') return <PDFElegant data={data} />
   if (template === 'compact') return <PDFCompact data={data} />
-  return <PDFModern data={data} />
+  if (template === 'modern') return <PDFModern data={data} />
+  return <PDFVariant data={data} template={template} />
 }

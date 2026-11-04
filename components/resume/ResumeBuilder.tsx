@@ -193,17 +193,24 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
   async function exportPDF() {
     setExporting(true)
     try {
-      const res = await fetch(`/api/export/${resumeId}`)
-      if (!res.ok) throw new Error('Export failed')
+      const res = await fetch(`/api/export/${resumeId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data, template, title }),
+      })
+      if (!res.ok) {
+        const error: { error?: string } = await res.json()
+        throw new Error(error.error || 'Export failed')
+      }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${title.replace(/[^a-z0-9]/gi, '_')}.pdf`
+      a.download = `${title.replace(/[^a-z0-9]/gi, '_') || 'resume'}.pdf`
       a.click()
-      URL.revokeObjectURL(url)
-    } catch {
-      alert('PDF export failed. Please try again.')
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'PDF export failed. Please try again.')
     } finally {
       setExporting(false)
     }

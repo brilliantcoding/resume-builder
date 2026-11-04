@@ -56,7 +56,29 @@ export interface CertificationEntry {
   url?: string
 }
 
-export type TemplateId = 'modern' | 'classic' | 'minimal' | 'creative' | 'professional' | 'executive' | 'timeline' | 'elegant' | 'compact' | 'altacv' | 'jakes' | 'sixtyseconds' | 'berlin' | 'tokyo' | 'vienna'
+export const TEMPLATE_IDS = [
+  'modern',
+  'classic',
+  'minimal',
+  'creative',
+  'professional',
+  'executive',
+  'timeline',
+  'elegant',
+  'compact',
+  'altacv',
+  'jakes',
+  'sixtyseconds',
+  'berlin',
+  'tokyo',
+  'vienna',
+] as const
+
+export type TemplateId = (typeof TEMPLATE_IDS)[number]
+
+export function isTemplateId(value: unknown): value is TemplateId {
+  return typeof value === 'string' && TEMPLATE_IDS.some((template) => template === value)
+}
 
 export interface ResumeData {
   personalInfo: PersonalInfo
