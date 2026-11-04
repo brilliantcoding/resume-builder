@@ -1,5 +1,6 @@
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import { ResumeData, TemplateId } from '@/types/resume'
+import { buildPDFVariantDocument } from '@/lib/pdf-variants'
 
 const styles = StyleSheet.create({
   page: { padding: 36, fontFamily: 'Helvetica', fontSize: 9, color: '#1a1a1a', lineHeight: 1.4 },
@@ -20,94 +21,76 @@ function PDFModern({ data }: { data: ResumeData }) {
   const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
   return (
     <Document>
-      <Page size="A4" style={[styles.page, { padding: 0 }]}>
-        {/* Header — explicit padding, no shorthand strings, no opacity */}
-        <View style={{ backgroundColor: '#4f46e5', flexDirection: 'column', paddingTop: 20, paddingBottom: 16, paddingLeft: 36, paddingRight: 36 }}>
-          <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: 'white', marginBottom: 4 }}>{p.fullName || 'Your Name'}</Text>
-          {p.jobTitle ? <Text style={{ fontSize: 10, color: '#c4b5fd', marginBottom: 0 }}>{p.jobTitle}</Text> : null}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8, gap: 10 }}>
-            {p.email && <Text style={{ color: '#e0e7ff', fontSize: 8 }}>{p.email}</Text>}
-            {p.phone && <Text style={{ color: '#e0e7ff', fontSize: 8 }}>{p.phone}</Text>}
-            {p.location && <Text style={{ color: '#e0e7ff', fontSize: 8 }}>{p.location}</Text>}
-            {p.linkedin && <Text style={{ color: '#e0e7ff', fontSize: 8 }}>{p.linkedin}</Text>}
-          </View>
+      <Page size="A4" style={[styles.page, { padding: 0, flexDirection: 'row' }]}>
+        <View style={{ width: '35%', backgroundColor: '#4f46e5', paddingTop: 23, paddingBottom: 20, paddingLeft: 17, paddingRight: 17 }}>
+          <Text style={{ fontSize: 17, lineHeight: 1.2, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', marginBottom: 4 }}>{p.fullName || 'Your Name'}</Text>
+          <Text style={{ fontSize: 8, color: '#c4b5fd', marginBottom: 12 }}>{p.jobTitle || 'Job Title'}</Text>
+          <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: '#c7d2fe', letterSpacing: 0.8, marginBottom: 6 }}>CONTACT</Text>
+          {[p.email, p.phone, p.location, p.linkedin, p.github, p.website].filter(Boolean).map((value, index) => (
+            <Text key={index} style={{ color: '#e0e7ff', fontSize: 7, marginBottom: 4 }}>{value}</Text>
+          ))}
+          {skills.length > 0 ? <View style={{ marginTop: 13 }}>
+            <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: '#c7d2fe', letterSpacing: 0.8, marginBottom: 7 }}>SKILLS</Text>
+            {skills.map((group, index) => (
+              <View key={group.id || index} style={{ marginBottom: 8 }}>
+                {group.category ? <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#e0e7ff', marginBottom: 3 }}>{group.category}</Text> : null}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {group.skills.map((skill, skillIndex) => <Text key={skillIndex} style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFFFFF', fontSize: 6.5, paddingTop: 2, paddingBottom: 2, paddingLeft: 4, paddingRight: 4, marginRight: 3, marginBottom: 3, borderRadius: 5 }}>{skill}</Text>)}
+                </View>
+              </View>
+            ))}
+          </View> : null}
+          {education.length > 0 ? <View style={{ marginTop: 7 }}>
+            <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: '#c7d2fe', letterSpacing: 0.8, marginBottom: 7 }}>EDUCATION</Text>
+            {education.map((entry, index) => (
+              <View key={entry.id || index} style={{ marginBottom: 7 }}>
+                <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: '#FFFFFF' }}>{entry.institution}</Text>
+                <Text style={{ fontSize: 6.7, color: '#e0e7ff' }}>{entry.degree}{entry.field ? ` in ${entry.field}` : ''}</Text>
+                <Text style={{ fontSize: 6.5, color: '#c7d2fe' }}>{entry.startDate}{entry.startDate && entry.endDate ? ' – ' : ''}{entry.endDate}</Text>
+                {entry.gpa ? <Text style={{ fontSize: 6.5, color: '#c7d2fe' }}>GPA: {entry.gpa}</Text> : null}
+              </View>
+            ))}
+          </View> : null}
+          {certifications.length > 0 ? <View style={{ marginTop: 7 }}>
+            <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: '#c7d2fe', letterSpacing: 0.8, marginBottom: 7 }}>CERTIFICATIONS</Text>
+            {certifications.map((entry, index) => (
+              <View key={entry.id || index} style={{ marginBottom: 6 }}>
+                <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: '#FFFFFF' }}>{entry.name}</Text>
+                {entry.issuer || entry.date ? <Text style={{ fontSize: 6.2, color: '#c7d2fe' }}>{entry.issuer}{entry.issuer && entry.date ? ' · ' : ''}{entry.date}</Text> : null}
+              </View>
+            ))}
+          </View> : null}
         </View>
-
-        <View style={{ paddingTop: 20, paddingBottom: 36, paddingLeft: 36, paddingRight: 36 }}>
-          {summary ? <View><Text style={styles.sectionTitle}>Summary</Text><Text style={{ fontSize: 9, lineHeight: 1.6 }}>{summary}</Text></View> : null}
-
-          {experience.length > 0 && (
-            <View>
-              <Text style={styles.sectionTitle}>Experience</Text>
-              {experience.map((exp, i) => (
-                <View key={i} style={{ marginBottom: 10 }}>
-                  <View style={styles.row}>
-                    <Text style={styles.bold}>{exp.position}</Text>
-                    <Text style={styles.muted}>{exp.startDate}{exp.startDate ? ' – ' : ''}{exp.current ? 'Present' : exp.endDate}</Text>
-                  </View>
-                  <Text style={{ color: '#4f46e5', fontSize: 8, marginBottom: 4 }}>{exp.company}</Text>
-                  {exp.bullets.filter(b => b.trim()).map((b, j) => (
-                    <Text key={j} style={[styles.bullet, { paddingLeft: 8, fontSize: 8.5 }]}>• {b}</Text>
-                  ))}
+        <View style={{ flex: 1, paddingTop: 25, paddingBottom: 24, paddingLeft: 19, paddingRight: 19 }}>
+          {summary ? <View style={{ marginBottom: 14 }}>
+            <Text style={[styles.sectionTitle, { color: '#4f46e5', borderBottomColor: '#4f46e5', marginTop: 0 }]}>Professional Summary</Text>
+            <Text style={{ fontSize: 8, lineHeight: 1.6, color: '#374151' }}>{summary}</Text>
+          </View> : null}
+          {experience.length > 0 ? <View style={{ marginBottom: 12 }}>
+            <Text style={[styles.sectionTitle, { color: '#4f46e5', borderBottomColor: '#4f46e5', marginTop: 0 }]}>Experience</Text>
+            {experience.map((entry, index) => (
+              <View key={entry.id || index} style={{ marginBottom: 10 }}>
+                <View style={styles.row}>
+                  <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 8.5, flex: 1, paddingRight: 4 }}>{entry.position}</Text>
+                  <Text style={styles.muted}>{entry.startDate}{entry.startDate ? ' – ' : ''}{entry.current ? 'Present' : entry.endDate}</Text>
                 </View>
-              ))}
-            </View>
-          )}
-
-          {education.length > 0 && (
-            <View>
-              <Text style={styles.sectionTitle}>Education</Text>
-              {education.map((edu, i) => (
-                <View key={i} style={{ marginBottom: 8 }}>
-                  <View style={styles.row}>
-                    <Text style={styles.bold}>{edu.institution}</Text>
-                    <Text style={styles.muted}>{edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}</Text>
-                  </View>
-                  <Text style={{ fontSize: 8 }}>{edu.degree}{edu.field ? ` in ${edu.field}` : ''}{edu.gpa ? ` · GPA ${edu.gpa}` : ''}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {skills.length > 0 && (
-            <View>
-              <Text style={styles.sectionTitle}>Skills</Text>
-              {skills.map((group, i) => (
-                <View key={i} style={{ marginBottom: 6 }}>
-                  {group.category && <Text style={[styles.bold, { fontSize: 8.5, marginBottom: 3 }]}>{group.category}</Text>}
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                    {group.skills.map((skill, j) => <Text key={j} style={styles.chip}>{skill}</Text>)}
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {projects.length > 0 && (
-            <View>
-              <Text style={styles.sectionTitle}>Projects</Text>
-              {projects.map((proj, i) => (
-                <View key={i} style={{ marginBottom: 8 }}>
-                  <View style={styles.row}>
-                    <Text style={styles.bold}>{proj.name}</Text>
-                    {proj.technologies.length > 0 && <Text style={styles.muted}>{proj.technologies.join(', ')}</Text>}
-                  </View>
-                  <Text style={{ fontSize: 8.5 }}>{proj.description}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {certifications.length > 0 && (
-            <View>
-              <Text style={styles.sectionTitle}>Certifications</Text>
-              {certifications.map((cert, i) => (
-                <Text key={i} style={{ paddingLeft: 8, fontSize: 8.5, marginBottom: 2 }}>
-                  • {cert.name}{cert.issuer ? ` (${cert.issuer})` : ''}
-                </Text>
-              ))}
-            </View>
-          )}
+                <Text style={{ color: '#4f46e5', fontSize: 7.5, marginBottom: 4 }}>{entry.company}</Text>
+                {entry.bullets.filter((bullet) => bullet.trim()).map((bullet, bulletIndex) => (
+                  <Text key={bulletIndex} style={{ fontSize: 7.5, lineHeight: 1.5, paddingLeft: 7, marginBottom: 2, color: '#374151' }}>• {bullet}</Text>
+                ))}
+              </View>
+            ))}
+          </View> : null}
+          {projects.length > 0 ? <View>
+            <Text style={[styles.sectionTitle, { color: '#4f46e5', borderBottomColor: '#4f46e5', marginTop: 0 }]}>Projects</Text>
+            {projects.map((entry, index) => (
+              <View key={entry.id || index} style={{ marginBottom: 8 }}>
+                <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 8.5 }}>{entry.name}</Text>
+                {entry.technologies.length > 0 ? <Text style={styles.muted}>{entry.technologies.join(', ')}</Text> : null}
+                <Text style={{ fontSize: 7.5, lineHeight: 1.5 }}>{entry.description}</Text>
+              </View>
+            ))}
+          </View> : null}
         </View>
       </Page>
     </Document>
@@ -122,8 +105,8 @@ function PDFClassic({ data }: { data: ResumeData }) {
         <View style={{ flexDirection: 'column', alignItems: 'center', marginBottom: 16, borderBottomWidth: 1, borderBottomColor: '#ccc', paddingBottom: 12 }}>
           <Text style={{ fontSize: 22, fontFamily: 'Times-Bold', textAlign: 'center', marginBottom: 2 }}>{p.fullName || 'Your Name'}</Text>
           {p.jobTitle ? <Text style={{ fontSize: 10, color: '#555', fontFamily: 'Times-Italic', textAlign: 'center', marginBottom: 4 }}>{p.jobTitle}</Text> : null}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, marginTop: 4 }}>
-            {[p.email, p.phone, p.location, p.linkedin].filter(Boolean).map((v, i) => (
+          <View style={{ width: '100%', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, marginTop: 4 }}>
+            {[p.email, p.phone, p.location, p.linkedin, p.github, p.website].filter(Boolean).map((v, i) => (
               <Text key={i} style={{ fontSize: 8, color: '#555' }}>{v}</Text>
             ))}
           </View>
@@ -131,6 +114,7 @@ function PDFClassic({ data }: { data: ResumeData }) {
         {summary && <View><Text style={styles.sectionTitleClassic}>Summary</Text><Text style={{ fontSize: 9 }}>{summary}</Text></View>}
         {experience.length > 0 && <View><Text style={styles.sectionTitleClassic}>Professional Experience</Text>{experience.map((exp, i) => (<View key={i} style={{ marginBottom: 10 }}><View style={styles.row}><Text style={{ fontFamily: 'Times-Bold', fontSize: 10 }}>{exp.position} — {exp.company}</Text><Text style={styles.muted}>{exp.startDate}{exp.startDate ? '–' : ''}{exp.current ? 'Present' : exp.endDate}</Text></View>{exp.bullets.filter(b => b.trim()).map((b, j) => (<Text key={j} style={{ paddingLeft: 10, fontSize: 8.5, marginBottom: 2 }}>• {b}</Text>))}</View>))}</View>}
         {education.length > 0 && <View><Text style={styles.sectionTitleClassic}>Education</Text>{education.map((edu, i) => (<View key={i} style={[styles.row, { marginBottom: 8 }]}><View><Text style={{ fontFamily: 'Times-Bold', fontSize: 10 }}>{edu.institution}</Text><Text style={{ fontSize: 8.5 }}>{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</Text></View><Text style={styles.muted}>{edu.startDate}{edu.startDate && edu.endDate ? '–' : ''}{edu.endDate}</Text></View>))}</View>}
+        {projects.length > 0 && <View><Text style={styles.sectionTitleClassic}>Projects</Text>{projects.map((proj, i) => (<View key={i} style={{ marginBottom: 7 }}><View style={styles.row}><Text style={{ fontFamily: 'Times-Bold', fontSize: 9.5 }}>{proj.name}</Text><Text style={styles.muted}>{proj.technologies.join(', ')}</Text></View><Text style={{ fontSize: 8.5, marginTop: 2 }}>{proj.description}</Text></View>))}</View>}
         {skills.length > 0 && <View><Text style={styles.sectionTitleClassic}>Skills</Text>{skills.map((g, i) => (<View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>{g.category && <Text style={{ fontFamily: 'Times-Bold', fontSize: 8.5, width: 90 }}>{g.category}: </Text>}<Text style={{ fontSize: 8.5 }}>{g.skills.join(', ')}</Text></View>))}</View>}
         {certifications.length > 0 && <View><Text style={styles.sectionTitleClassic}>Certifications / Accomplishments</Text>{certifications.map((cert, i) => (<Text key={i} style={{ paddingLeft: 10, fontSize: 8.5, marginBottom: 2 }}>• {cert.name}{cert.issuer ? ` (${cert.issuer})` : ''}</Text>))}</View>}
       </Page>
@@ -148,11 +132,13 @@ function PDFProfessional({ data }: { data: ResumeData }) {
     <Document>
       <Page size="A4" style={[styles.page, { fontFamily: 'Times-Roman', padding: 36 }]}>
         {/* Header */}
-        <View style={{ flexDirection: 'column', alignItems: 'center', marginBottom: 10 }}>
-          <Text style={{ fontSize: 24, fontFamily: 'Times-Bold', letterSpacing: 2, textAlign: 'center', marginBottom: 2 }}>{p.fullName || 'Your Name'}</Text>
-          {p.jobTitle ? <Text style={{ fontSize: 10, fontFamily: 'Times-Italic', textAlign: 'center', marginBottom: 2 }}>{p.jobTitle}</Text> : null}
-          {p.location ? <Text style={{ fontSize: 9, textAlign: 'center', marginBottom: 2 }}>{p.location}</Text> : null}
-          {contactParts.length > 0 ? <Text style={{ fontSize: 8, color: '#333', textAlign: 'center' }}>{contactParts.join('  •  ')}</Text> : null}
+        <View style={{ flexDirection: 'column', alignItems: 'center', marginBottom: 10, width: '100%' }}>
+          <Text style={{ width: '100%', fontSize: 24, lineHeight: 1.2, fontFamily: 'Times-Bold', letterSpacing: 2, textAlign: 'center', marginBottom: 5 }}>{p.fullName || 'Your Name'}</Text>
+          {p.jobTitle ? <Text style={{ width: '100%', fontSize: 10, lineHeight: 1.3, fontFamily: 'Times-Italic', textAlign: 'center', marginBottom: 3 }}>{p.jobTitle}</Text> : null}
+          {p.location ? <Text style={{ width: '100%', fontSize: 9, lineHeight: 1.3, textAlign: 'center', marginBottom: 3 }}>{p.location}</Text> : null}
+          {contactParts.map((contact, index) => (
+            <Text key={index} style={{ width: '100%', fontSize: 8, lineHeight: 1.3, color: '#333', textAlign: 'center' }}>{contact}</Text>
+          ))}
         </View>
 
         {summary ? (
@@ -262,7 +248,7 @@ function PDFExecutive({ data }: { data: ResumeData }) {
           <Text style={{ fontSize: 14, fontFamily: 'Helvetica-Bold', color: 'white', marginBottom: 2 }}>{p.fullName || 'Your Name'}</Text>
           {p.jobTitle ? <Text style={{ fontSize: 8, color: 'rgba(255,255,255,0.7)', fontFamily: 'Helvetica-Oblique', marginBottom: 10 }}>{p.jobTitle}</Text> : null}
           <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: ACCENT, letterSpacing: 1, marginBottom: 5, marginTop: 8 }}>CONTACT</Text>
-          {[p.location, p.phone, p.email, p.linkedin, p.github].filter(Boolean).map((v, i) => (
+          {[p.location, p.phone, p.email, p.linkedin, p.github, p.website].filter(Boolean).map((v, i) => (
             <Text key={i} style={{ fontSize: 7, color: 'rgba(255,255,255,0.8)', marginBottom: 3 }}>{v}</Text>
           ))}
           {skills.length > 0 ? <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: ACCENT, letterSpacing: 1, marginBottom: 5, marginTop: 12 }}>SKILLS</Text> : null}
@@ -285,6 +271,7 @@ function PDFExecutive({ data }: { data: ResumeData }) {
           {summary ? <View><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', textTransform: 'uppercase', color: NAVY, letterSpacing: 1, borderBottomWidth: 1.5, borderBottomColor: ACCENT, paddingBottom: 2, marginBottom: 6 }}>Professional Summary</Text><Text style={{ fontSize: 8.5, lineHeight: 1.7, color: '#444', marginBottom: 14 }}>{summary}</Text></View> : null}
           {experience.length > 0 ? <View><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', textTransform: 'uppercase', color: NAVY, letterSpacing: 1, borderBottomWidth: 1.5, borderBottomColor: ACCENT, paddingBottom: 2, marginBottom: 8 }}>Experience</Text>{experience.map((exp, i) => (<View key={i} style={{ marginBottom: 10, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: '#e5e7eb' }}><View style={styles.row}><Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9.5 }}>{exp.position}</Text><Text style={styles.muted}>{exp.startDate}{exp.startDate ? ' – ' : ''}{exp.current ? 'Present' : exp.endDate}</Text></View><Text style={{ fontSize: 8, color: ACCENT, fontFamily: 'Helvetica-Bold', marginBottom: 3 }}>{exp.company}</Text>{exp.bullets.filter(b => b.trim()).map((b, j) => <Text key={j} style={{ fontSize: 8, paddingLeft: 6, marginBottom: 1.5, color: '#444' }}>• {b}</Text>)}</View>))}</View> : null}
           {education.length > 0 ? <View><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', textTransform: 'uppercase', color: NAVY, letterSpacing: 1, borderBottomWidth: 1.5, borderBottomColor: ACCENT, paddingBottom: 2, marginBottom: 8, marginTop: 12 }}>Education</Text>{education.map((edu, i) => (<View key={i} style={{ marginBottom: 8, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: '#e5e7eb' }}><View style={styles.row}><Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9.5 }}>{edu.institution}</Text><Text style={styles.muted}>{edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}</Text></View><Text style={{ fontSize: 8 }}>{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</Text></View>))}</View> : null}
+          {projects.length > 0 ? <View><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', textTransform: 'uppercase', color: NAVY, letterSpacing: 1, borderBottomWidth: 1.5, borderBottomColor: ACCENT, paddingBottom: 2, marginBottom: 8, marginTop: 12 }}>Projects</Text>{projects.map((project, index) => (<View key={project.id || index} style={{ marginBottom: 9, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: '#e5e7eb' }}><View style={styles.row}><Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9 }}>{project.name}</Text><Text style={styles.muted}>{project.technologies.join(', ')}</Text></View><Text style={{ fontSize: 8, lineHeight: 1.5, color: '#444', marginTop: 2 }}>{project.description}</Text></View>))}</View> : null}
         </View>
       </Page>
     </Document>
@@ -303,7 +290,7 @@ function PDFTimeline({ data }: { data: ResumeData }) {
             {p.jobTitle ? <Text style={{ fontSize: 10, color: TEAL, fontFamily: 'Helvetica-Bold' }}>{p.jobTitle}</Text> : null}
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            {[p.email, p.phone, p.location, p.linkedin].filter(Boolean).map((v, i) => (
+            {[p.email, p.phone, p.location, p.linkedin, p.github, p.website].filter(Boolean).map((v, i) => (
               <Text key={i} style={{ fontSize: 7.5, color: '#555', marginBottom: 1.5 }}>{v}</Text>
             ))}
           </View>
@@ -312,6 +299,8 @@ function PDFTimeline({ data }: { data: ResumeData }) {
         {experience.length > 0 ? <View><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: TEAL, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>Experience</Text>{experience.map((exp, i) => (<View key={i} style={{ flexDirection: 'row', marginBottom: 10 }}><View style={{ width: 10, alignItems: 'center', marginRight: 8 }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: TEAL, marginTop: 3 }} /><View style={{ width: 1.5, flex: 1, backgroundColor: '#ccfbf1', marginTop: 2 }} /></View><View style={{ flex: 1 }}><View style={styles.row}><Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9.5 }}>{exp.position}</Text><Text style={styles.muted}>{exp.startDate}{exp.startDate ? ' – ' : ''}{exp.current ? 'Present' : exp.endDate}</Text></View><Text style={{ fontSize: 8, color: TEAL, fontFamily: 'Helvetica-Bold', marginBottom: 3 }}>{exp.company}</Text>{exp.bullets.filter(b => b.trim()).map((b, j) => <Text key={j} style={{ fontSize: 8, paddingLeft: 4, marginBottom: 1.5, color: '#444' }}>• {b}</Text>)}</View></View>))}</View> : null}
         {education.length > 0 ? <View style={{ marginTop: 8 }}><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: TEAL, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>Education</Text>{education.map((edu, i) => (<View key={i} style={{ flexDirection: 'row', marginBottom: 8 }}><View style={{ width: 10, alignItems: 'center', marginRight: 8 }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: TEAL }} /></View><View style={{ flex: 1 }}><View style={styles.row}><Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9.5 }}>{edu.institution}</Text><Text style={styles.muted}>{edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}</Text></View><Text style={{ fontSize: 8 }}>{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</Text></View></View>))}</View> : null}
         {skills.length > 0 ? <View style={{ marginTop: 10 }}><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: TEAL, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>Skills</Text>{skills.map((g, i) => (<View key={i} style={{ marginBottom: 5, marginLeft: 18 }}>{g.category ? <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 8, marginBottom: 2 }}>{g.category}</Text> : null}<Text style={{ fontSize: 8 }}>{g.skills.join('  ·  ')}</Text></View>))}</View> : null}
+        {certifications.length > 0 ? <View style={{ marginTop: 10 }}><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: TEAL, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>Certifications</Text>{certifications.map((cert, i) => (<View key={i} style={{ flexDirection: 'row', marginBottom: 8 }}><View style={{ width: 10, alignItems: 'center', marginRight: 8 }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: TEAL }} /></View><View style={{ flex: 1 }}><View style={styles.row}><Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 8.5 }}>{cert.name}</Text><Text style={styles.muted}>{cert.date}</Text></View><Text style={{ fontSize: 7.5, color: '#555' }}>{cert.issuer}</Text></View></View>))}</View> : null}
+        {projects.length > 0 ? <View style={{ marginTop: 10 }}><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: TEAL, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>Projects</Text>{projects.map((project, i) => (<View key={i} style={{ flexDirection: 'row', marginBottom: 9 }}><View style={{ width: 10, alignItems: 'center', marginRight: 8 }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: TEAL }} /></View><View style={{ flex: 1 }}><View style={styles.row}><Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 8.5 }}>{project.name}</Text><Text style={styles.muted}>{project.technologies.join(', ')}</Text></View><Text style={{ fontSize: 8, color: '#444', marginTop: 2 }}>{project.description}</Text></View></View>))}</View> : null}
       </Page>
     </Document>
   )
@@ -323,12 +312,12 @@ function PDFElegant({ data }: { data: ResumeData }) {
   return (
     <Document>
       <Page size="A4" style={[styles.page, { fontFamily: 'Times-Roman', padding: 46 }]}>
-        <View style={{ alignItems: 'center', marginBottom: 12 }}>
-          <Text style={{ fontSize: 26, fontFamily: 'Times-Bold', letterSpacing: 4, marginBottom: 4 }}>{p.fullName || 'Your Name'}</Text>
-          {p.jobTitle ? <Text style={{ fontSize: 9, color: GOLD, letterSpacing: 2, marginBottom: 8 }}>{p.jobTitle.toUpperCase()}</Text> : null}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14 }}>
-            {[p.phone, p.email, p.location, p.linkedin].filter(Boolean).map((v, i) => (
-              <Text key={i} style={{ fontSize: 7.5, color: '#666' }}>{v}</Text>
+        <View style={{ alignItems: 'center', width: '100%', marginBottom: 12 }}>
+          <Text style={{ width: '100%', fontSize: 24, lineHeight: 1.2, fontFamily: 'Times-Bold', letterSpacing: 2, textAlign: 'center', marginBottom: 6 }}>{p.fullName || 'Your Name'}</Text>
+          {p.jobTitle ? <Text style={{ width: '100%', fontSize: 9, lineHeight: 1.3, color: GOLD, letterSpacing: 2, textAlign: 'center', marginBottom: 5 }}>{p.jobTitle.toUpperCase()}</Text> : null}
+          <View style={{ width: '100%', alignItems: 'center', gap: 2 }}>
+            {[p.phone, p.email, p.location, p.linkedin, p.github, p.website].filter(Boolean).map((v, i) => (
+              <Text key={i} style={{ width: '100%', fontSize: 7.5, lineHeight: 1.3, color: '#666', textAlign: 'center' }}>{v}</Text>
             ))}
           </View>
           <View style={{ width: 50, height: 1.5, backgroundColor: GOLD, marginTop: 12 }} />
@@ -338,6 +327,7 @@ function PDFElegant({ data }: { data: ResumeData }) {
         {education.length > 0 ? <View><View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, marginTop: 14 }}><View style={{ flex: 1, height: 0.5, backgroundColor: GOLD, opacity: 0.4 }} /><Text style={{ fontSize: 8, color: GOLD, letterSpacing: 2.5, marginHorizontal: 8 }}>EDUCATION</Text><View style={{ flex: 1, height: 0.5, backgroundColor: GOLD, opacity: 0.4 }} /></View>{education.map((edu, i) => (<View key={i} style={[styles.row, { marginBottom: 8 }]}><View><Text style={{ fontFamily: 'Times-Bold', fontSize: 10 }}>{edu.institution}</Text><Text style={{ fontSize: 8.5, fontFamily: 'Times-Italic', color: '#666' }}>{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</Text></View><Text style={{ fontSize: 8, color: '#888', fontFamily: 'Times-Italic' }}>{edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}</Text></View>))}</View> : null}
         {skills.length > 0 ? <View style={{ marginTop: 14 }}><View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}><View style={{ flex: 1, height: 0.5, backgroundColor: GOLD, opacity: 0.4 }} /><Text style={{ fontSize: 8, color: GOLD, letterSpacing: 2.5, marginHorizontal: 8 }}>SKILLS</Text><View style={{ flex: 1, height: 0.5, backgroundColor: GOLD, opacity: 0.4 }} /></View>{skills.map((g, i) => (<View key={i} style={{ flexDirection: 'row', marginBottom: 4 }}>{g.category ? <Text style={{ fontFamily: 'Times-Italic', fontSize: 8.5, color: GOLD, width: 100 }}>{g.category}: </Text> : null}<Text style={{ fontSize: 8.5, flex: 1 }}>{g.skills.join('  ·  ')}</Text></View>))}</View> : null}
         {certifications.length > 0 ? <View style={{ marginTop: 14 }}><View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}><View style={{ flex: 1, height: 0.5, backgroundColor: GOLD, opacity: 0.4 }} /><Text style={{ fontSize: 8, color: GOLD, letterSpacing: 2.5, marginHorizontal: 8 }}>CERTIFICATIONS</Text><View style={{ flex: 1, height: 0.5, backgroundColor: GOLD, opacity: 0.4 }} /></View>{certifications.map((c, i) => (<View key={i} style={[styles.row, { marginBottom: 5 }]}><Text style={{ fontFamily: 'Times-Bold', fontSize: 9 }}>{c.name}{c.issuer ? <Text style={{ fontFamily: 'Times-Italic', color: '#888' }}> — {c.issuer}</Text> : null}</Text>{c.date ? <Text style={{ fontSize: 8, color: '#888', fontFamily: 'Times-Italic' }}>{c.date}</Text> : null}</View>))}</View> : null}
+        {projects.length > 0 ? <View><View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, marginTop: 14 }}><View style={{ flex: 1, height: 0.5, backgroundColor: GOLD, opacity: 0.4 }} /><Text style={{ fontSize: 8, color: GOLD, letterSpacing: 2.5, marginHorizontal: 8 }}>PROJECTS</Text><View style={{ flex: 1, height: 0.5, backgroundColor: GOLD, opacity: 0.4 }} /></View>{projects.map((project, i) => (<View key={i} style={{ marginBottom: 8 }}><View style={styles.row}><Text style={{ fontFamily: 'Times-Bold', fontSize: 9 }}>{project.name}</Text><Text style={{ fontSize: 8, color: '#888' }}>{project.technologies.join(', ')}</Text></View><Text style={{ fontSize: 8.5, color: '#444' }}>{project.description}</Text></View>))}</View> : null}
       </Page>
     </Document>
   )
@@ -345,16 +335,16 @@ function PDFElegant({ data }: { data: ResumeData }) {
 
 function PDFCompact({ data }: { data: ResumeData }) {
   const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
-  const VIOLET = '#5b21b6'
+  const VIOLET = '#b91c1c'
   return (
     <Document>
       <Page size="A4" style={[styles.page, { padding: 0 }]}>
         {/* Header bar */}
         <View style={{ backgroundColor: VIOLET, paddingTop: 18, paddingBottom: 18, paddingLeft: 26, paddingRight: 26, flexDirection: 'column' }}>
           <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: 'white', marginBottom: 3 }}>{p.fullName || 'Your Name'}</Text>
-          {p.jobTitle ? <Text style={{ fontSize: 9, color: '#ddd6fe', marginBottom: 6 }}>{p.jobTitle}</Text> : null}
+          {p.jobTitle ? <Text style={{ fontSize: 9, color: '#fecaca', marginBottom: 6 }}>{p.jobTitle}</Text> : null}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-            {[p.phone, p.email, p.location, p.linkedin].filter(Boolean).map((v, i) => (
+            {[p.phone, p.email, p.location, p.linkedin, p.github].filter(Boolean).map((v, i) => (
               <Text key={i} style={{ fontSize: 7.5, color: 'rgba(255,255,255,0.85)' }}>{v}</Text>
             ))}
           </View>
@@ -372,6 +362,124 @@ function PDFCompact({ data }: { data: ResumeData }) {
             {summary ? <View style={{ marginBottom: 12 }}><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: VIOLET, textTransform: 'uppercase', letterSpacing: 1, borderBottomWidth: 1.5, borderBottomColor: VIOLET, paddingBottom: 2, marginBottom: 5 }}>Summary</Text><Text style={{ fontSize: 8.5, lineHeight: 1.7, color: '#444' }}>{summary}</Text></View> : null}
             {experience.length > 0 ? <View><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: VIOLET, textTransform: 'uppercase', letterSpacing: 1, borderBottomWidth: 1.5, borderBottomColor: VIOLET, paddingBottom: 2, marginBottom: 6 }}>Experience</Text>{experience.map((exp, i) => (<View key={i} style={{ marginBottom: 10 }}><View style={styles.row}><Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9 }}>{exp.position}</Text><Text style={styles.muted}>{exp.startDate}{exp.startDate ? ' – ' : ''}{exp.current ? 'Present' : exp.endDate}</Text></View><Text style={{ fontSize: 7.5, color: VIOLET, fontFamily: 'Helvetica-Bold', marginBottom: 2 }}>{exp.company}</Text>{exp.bullets.filter(b => b.trim()).map((b, j) => <Text key={j} style={{ fontSize: 7.5, paddingLeft: 6, marginBottom: 1, color: '#444' }}>• {b}</Text>)}</View>))}</View> : null}
             {projects.length > 0 ? <View style={{ marginTop: 10 }}><Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: VIOLET, textTransform: 'uppercase', letterSpacing: 1, borderBottomWidth: 1.5, borderBottomColor: VIOLET, paddingBottom: 2, marginBottom: 6 }}>Projects</Text>{projects.map((proj, i) => (<View key={i} style={{ marginBottom: 8 }}><View style={styles.row}><Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 9 }}>{proj.name}</Text>{proj.technologies.length > 0 ? <Text style={styles.muted}>{proj.technologies.join(', ')}</Text> : null}</View><Text style={{ fontSize: 8 }}>{proj.description}</Text></View>))}</View> : null}
+          </View>
+        </View>
+      </Page>
+    </Document>
+  )
+}
+
+function PDFTokyo({ data }: { data: ResumeData }) {
+  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
+  const accent = '#0EA5E9'
+  const dark = '#0F172A'
+  const body = '#334155'
+  const muted = '#64748B'
+  const rule = '#E2E8F0'
+  const section = (name: string) => (
+    <View style={{ marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+        <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: accent, letterSpacing: 1.5 }}>{name.toUpperCase()}</Text>
+        <View style={{ flex: 1, height: 0.7, backgroundColor: rule, marginLeft: 8 }} />
+      </View>
+    </View>
+  )
+
+  return (
+    <Document>
+      <Page size="A4" style={[styles.page, { padding: 0, color: body }]}>
+        <View style={{ height: 3, backgroundColor: accent }} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: 21, paddingBottom: 15, paddingLeft: 30, paddingRight: 30, borderBottomWidth: 0.7, borderBottomColor: rule }}>
+          <View style={{ flex: 1, paddingRight: 12 }}>
+            <Text style={{ fontSize: 20, fontFamily: 'Helvetica-Bold', color: dark, marginBottom: 3 }}>{p.fullName || 'Your Name'}</Text>
+            {p.jobTitle ? <Text style={{ fontSize: 9, color: accent }}>{p.jobTitle}</Text> : null}
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            {[p.email, p.phone, p.location, p.linkedin, p.github, p.website].filter(Boolean).map((item, index) => (
+              <Text key={index} style={{ fontSize: 7, color: muted, marginBottom: 2 }}>{item}</Text>
+            ))}
+          </View>
+        </View>
+
+        <View style={{ flexDirection: 'row', paddingTop: 17, paddingBottom: 24, paddingLeft: 30, paddingRight: 30 }}>
+          <View style={{ width: '62%', paddingRight: 18 }}>
+            {summary ? <View>
+              {section('Summary')}
+              <Text style={{ fontSize: 8, lineHeight: 1.65, color: body, marginTop: -7, marginBottom: 11 }}>{summary}</Text>
+            </View> : null}
+
+            {experience.length > 0 ? <View>
+              {section('Experience')}
+              {experience.map((entry, index) => (
+                <View key={entry.id || index} style={{ marginTop: -6, marginBottom: index < experience.length - 1 ? 10 : 0, paddingBottom: index < experience.length - 1 ? 9 : 0, borderBottomWidth: index < experience.length - 1 ? 0.6 : 0, borderBottomColor: rule }}>
+                  <View style={styles.row}>
+                    <Text style={{ fontSize: 8.5, fontFamily: 'Helvetica-Bold', color: dark }}>{entry.position}</Text>
+                    <Text style={{ fontSize: 6.5, color: muted }}>{entry.startDate}{entry.startDate ? ' – ' : ''}{entry.current ? 'Present' : entry.endDate}</Text>
+                  </View>
+                  <Text style={{ fontSize: 7.5, color: accent, marginBottom: 4 }}>{entry.company}</Text>
+                  {entry.bullets.filter((bullet) => bullet.trim()).map((bullet, bulletIndex) => (
+                    <Text key={bulletIndex} style={{ fontSize: 7.2, lineHeight: 1.5, color: body, paddingLeft: 7, marginBottom: 1 }}>• {bullet}</Text>
+                  ))}
+                </View>
+              ))}
+            </View> : null}
+
+            {projects.length > 0 ? <View>
+              {section('Projects')}
+              {projects.map((entry, index) => (
+                <View key={entry.id || index} style={{ marginTop: -6, marginBottom: 8 }}>
+                  <View style={styles.row}>
+                    <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: dark }}>{entry.name}</Text>
+                    {entry.technologies.length > 0 ? <Text style={{ fontSize: 6.5, color: accent }}>{entry.technologies.join(', ')}</Text> : null}
+                  </View>
+                  <Text style={{ fontSize: 7.2, lineHeight: 1.5, color: body }}>{entry.description}</Text>
+                </View>
+              ))}
+            </View> : null}
+          </View>
+
+          <View style={{ width: '38%' }}>
+            {education.length > 0 ? <View>
+              {section('Education')}
+              {education.map((entry, index) => (
+                <View key={entry.id || index} style={{ marginTop: -6, marginBottom: 8 }}>
+                  <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: dark }}>{entry.institution}</Text>
+                  <Text style={{ fontSize: 7, color: accent }}>{entry.degree}{entry.field ? ` · ${entry.field}` : ''}</Text>
+                  <Text style={{ fontSize: 6.5, color: muted }}>{entry.startDate}{entry.startDate && entry.endDate ? ' – ' : ''}{entry.endDate}</Text>
+                  {entry.gpa ? <Text style={{ fontSize: 6.5, color: muted }}>GPA: {entry.gpa}</Text> : null}
+                  {entry.honors ? <Text style={{ fontSize: 6.5, color: muted }}>{entry.honors}</Text> : null}
+                </View>
+              ))}
+            </View> : null}
+
+            {skills.length > 0 ? <View>
+              {section('Skills')}
+              {skills.map((group, index) => (
+                <View key={group.id || index} style={{ marginTop: -6, marginBottom: 8 }}>
+                  {group.category ? <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: dark, marginBottom: 3 }}>{group.category.toUpperCase()}</Text> : null}
+                  {group.skills.map((skill, skillIndex) => (
+                    <View key={skillIndex} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 }}>
+                      <Text style={{ fontSize: 7, color: body, flex: 1 }}>{skill}</Text>
+                      <View style={{ flexDirection: 'row', gap: 2, alignItems: 'center' }}>
+                        {Array.from({ length: 5 }, (_, dotIndex) => (
+                          <View key={dotIndex} style={{ width: 4, height: 4, borderRadius: 1, backgroundColor: dotIndex < Math.max(2, 5 - (skillIndex % 3)) ? accent : rule }} />
+                        ))}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View> : null}
+
+            {certifications.length > 0 ? <View>
+              {section('Certifications')}
+              {certifications.map((entry, index) => (
+                <View key={entry.id || index} style={{ marginTop: -6, marginBottom: 7 }}>
+                  <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: dark }}>{entry.name}</Text>
+                  {entry.issuer || entry.date ? <Text style={{ fontSize: 6.5, color: muted }}>{entry.issuer}{entry.issuer && entry.date ? ' · ' : ''}{entry.date}</Text> : null}
+                </View>
+              ))}
+            </View> : null}
           </View>
         </View>
       </Page>
@@ -494,21 +602,32 @@ function PDFVariant({ data, template }: { data: ResumeData; template: PDFVariant
               paddingBottom: variant.layout === 'banner' ? 18 : 12,
               paddingLeft: 28,
               paddingRight: 28,
+              width: '100%',
               backgroundColor: variant.layout === 'banner' ? variant.accent : 'white',
               borderBottomWidth: variant.layout === 'minimal' || variant.layout === 'centered' ? 1 : 0,
               borderBottomColor: variant.accent,
               alignItems: variant.layout === 'centered' ? 'center' : 'flex-start',
             }}>
               <Text style={{
+                width: '100%',
                 fontSize: variant.compact ? 18 : 21,
+                lineHeight: 1.2,
                 fontFamily: boldFont,
                 color: variant.layout === 'banner' ? 'white' : variant.accent,
                 marginBottom: 3,
                 textAlign: variant.layout === 'centered' ? 'center' : 'left',
               }}>{p.fullName || 'Your Name'}</Text>
               {p.jobTitle ? <Text style={{ fontSize: 9, color: variant.layout === 'banner' ? '#e2e8f0' : '#475569', textAlign: variant.layout === 'centered' ? 'center' : 'left' }}>{p.jobTitle}</Text> : null}
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 6, justifyContent: variant.layout === 'centered' ? 'center' : 'flex-start' }}>
-                {contact.map((item, i) => <Text key={i} style={{ fontSize: 7.5, color: variant.layout === 'banner' ? '#f8fafc' : '#64748b' }}>{item}</Text>)}
+              <View style={{
+                width: '100%',
+                flexDirection: variant.layout === 'centered' ? 'column' : 'row',
+                flexWrap: 'wrap',
+                gap: 4,
+                marginTop: 6,
+                alignItems: variant.layout === 'centered' ? 'center' : 'flex-start',
+                justifyContent: variant.layout === 'centered' ? 'center' : 'flex-start',
+              }}>
+                {contact.map((item, i) => <Text key={i} style={{ width: variant.layout === 'centered' ? '100%' : undefined, fontSize: 7.5, lineHeight: 1.3, textAlign: variant.layout === 'centered' ? 'center' : 'left', color: variant.layout === 'banner' ? '#f8fafc' : '#64748b' }}>{item}</Text>)}
               </View>
             </View>
             {mainContent}
@@ -527,5 +646,6 @@ export function buildPDFDocument(data: ResumeData, template: TemplateId) {
   if (template === 'elegant') return <PDFElegant data={data} />
   if (template === 'compact') return <PDFCompact data={data} />
   if (template === 'modern') return <PDFModern data={data} />
-  return <PDFVariant data={data} template={template} />
+  if (template === 'tokyo') return <PDFTokyo data={data} />
+  return buildPDFVariantDocument(data, template) ?? <PDFVariant data={data} template={template} />
 }

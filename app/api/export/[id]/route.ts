@@ -9,33 +9,87 @@ async function getOwnedResume(id: string, userId: string) {
   return prisma.resume.findFirst({ where: { id, userId } })
 }
 
-function isResumeData(value: unknown): value is ResumeData {
-  const isRecord = (entry: unknown): entry is Record<string, unknown> =>
-    Boolean(entry) && typeof entry === 'object' && !Array.isArray(entry)
-  const hasStringFields = (entry: unknown, fields: string[]) =>
-    isRecord(entry) && fields.every((field) => typeof entry[field] === 'string')
-  if (!isRecord(value) || !hasStringFields(value.personalInfo, ['fullName', 'email', 'phone', 'location'])) return false
-  if (typeof value.summary !== 'string') return false
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
 
-  const isStringArray = (entry: unknown) =>
-    Array.isArray(entry) && entry.every((item) => typeof item === 'string')
-  return (
-    Array.isArray(value.experience) &&
-    value.experience.every((entry) =>
-      isRecord(entry) &&
-      hasStringFields(entry, ['company', 'position', 'startDate', 'endDate']) &&
-      typeof entry.current === 'boolean' &&
-      isStringArray(entry.bullets),
-    ) &&
-    Array.isArray(value.education) &&
-    value.education.every((entry) => isRecord(entry) && hasStringFields(entry, ['institution', 'degree', 'field', 'startDate', 'endDate'])) &&
-    Array.isArray(value.skills) &&
-    value.skills.every((entry) => isRecord(entry) && hasStringFields(entry, ['category']) && isStringArray(entry.skills)) &&
-    Array.isArray(value.projects) &&
-    value.projects.every((entry) => isRecord(entry) && hasStringFields(entry, ['name', 'description']) && isStringArray(entry.technologies)) &&
-    Array.isArray(value.certifications) &&
-    value.certifications.every((entry) => isRecord(entry) && hasStringFields(entry, ['name', 'issuer', 'date']))
-  )
+function normalizeResumeData(value: unknown): ResumeData | null {
+  if (!isRecord(value)) return null
+
+  const asString = (record: Record<string, unknown>, key: string) =>
+    typeof record[key] === 'string' ? record[key] as string : ''
+  const asStringArray = (record: Record<string, unknown>, key: string) =>
+    Array.isArray(record[key]) ? record[key].filter((item): item is string => typeof item === 'string') : []
+  const asRecords = (key: string) => {
+    const entries = value[key]
+    return entries == null ? [] : Array.isArray(entries) && entries.every(isRecord) ? entries : null
+  }
+  const personalInfo = value.personalInfo == null ? {} : value.personalInfo
+  if (!isRecord(personalInfo)) return null
+
+  const experience = asRecords('experience')
+  const education = asRecords('education')
+  const skills = asRecords('skills')
+  const projects = asRecords('projects')
+  const certifications = asRecords('certifications')
+  if (!experience || !education || !skills || !projects || !certifications) return null
+  if (value.summary != null && typeof value.summary !== 'string') return null
+
+  return {
+    personalInfo: {
+      fullName: asString(personalInfo, 'fullName'),
+      email: asString(personalInfo, 'email'),
+      phone: asString(personalInfo, 'phone'),
+      location: asString(personalInfo, 'location'),
+      website: asString(personalInfo, 'website'),
+      linkedin: asString(personalInfo, 'linkedin'),
+      github: asString(personalInfo, 'github'),
+      jobTitle: asString(personalInfo, 'jobTitle'),
+    },
+    summary: typeof value.summary === 'string' ? value.summary : '',
+    experience: experience.map((entry, index) => ({
+      id: asString(entry, 'id') || `experience-${index}`,
+      company: asString(entry, 'company'),
+      position: asString(entry, 'position'),
+      startDate: asString(entry, 'startDate'),
+      endDate: asString(entry, 'endDate'),
+      current: typeof entry.current === 'boolean' ? entry.current : false,
+      description: asString(entry, 'description'),
+      bullets: asStringArray(entry, 'bullets'),
+    })),
+    education: education.map((entry, index) => ({
+      id: asString(entry, 'id') || `education-${index}`,
+      institution: asString(entry, 'institution'),
+      degree: asString(entry, 'degree'),
+      field: asString(entry, 'field'),
+      startDate: asString(entry, 'startDate'),
+      endDate: asString(entry, 'endDate'),
+      gpa: asString(entry, 'gpa'),
+      honors: asString(entry, 'honors'),
+    })),
+    skills: skills.map((entry, index) => ({
+      id: asString(entry, 'id') || `skills-${index}`,
+      category: asString(entry, 'category'),
+      skills: asStringArray(entry, 'skills'),
+    })),
+    projects: projects.map((entry, index) => ({
+      id: asString(entry, 'id') || `project-${index}`,
+      name: asString(entry, 'name'),
+      description: asString(entry, 'description'),
+      technologies: asStringArray(entry, 'technologies'),
+      url: asString(entry, 'url'),
+      github: asString(entry, 'github'),
+      startDate: asString(entry, 'startDate'),
+      endDate: asString(entry, 'endDate'),
+    })),
+    certifications: certifications.map((entry, index) => ({
+      id: asString(entry, 'id') || `certification-${index}`,
+      name: asString(entry, 'name'),
+      issuer: asString(entry, 'issuer'),
+      date: asString(entry, 'date'),
+      url: asString(entry, 'url'),
+    })),
+  }
 }
 
 async function renderPDF(data: ResumeData, template: string, title: string) {
@@ -60,8 +114,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const resume = await getOwnedResume(id, session.user.id)
   if (!resume) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const data: unknown = JSON.parse(resume.data)
-  if (!isResumeData(data)) return NextResponse.json({ error: 'Resume data is invalid.' }, { status: 500 })
+  let storedData: unknown
+  try {
+    storedData = JSON.parse(resume.data)
+  } catch {
+    return NextResponse.json({ error: 'Saved resume data is invalid.' }, { status: 500 })
+  }
+  const data = normalizeResumeData(storedData)
+  if (!data) return NextResponse.json({ error: 'Saved resume data is invalid.' }, { status: 500 })
   return renderPDF(data, resume.template, resume.title)
 }
 
@@ -84,7 +144,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Invalid export request.' }, { status: 400 })
   }
   const request = body as { data?: unknown; template?: unknown; title?: unknown }
-  if (!isResumeData(request.data)) {
+  const data = normalizeResumeData(request.data)
+  if (!data) {
     return NextResponse.json({ error: 'Resume data is invalid.' }, { status: 400 })
   }
   if (!isTemplateId(request.template)) {
@@ -92,5 +153,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const title = typeof request.title === 'string' ? request.title : resume.title
-  return renderPDF(request.data, request.template, title)
+  return renderPDF(data, request.template, title)
 }
