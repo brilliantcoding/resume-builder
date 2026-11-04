@@ -10,7 +10,7 @@ type Stage = 'idle' | 'dragging' | 'uploading' | 'parsing' | 'done' | 'error'
 const STEPS = [
   { key: 'upload',  label: 'Uploading file',          detail: 'Sending to server' },
   { key: 'extract', label: 'Extracting text',          detail: 'Reading document content' },
-  { key: 'parse',   label: 'AI parsing resume',        detail: 'DeepSeek AI structuring your data' },
+  { key: 'parse',   label: 'Structuring resume',       detail: 'Organizing your resume details' },
   { key: 'save',    label: 'Saving to your workspace', detail: 'Almost done' },
 ] as const
 
@@ -322,7 +322,7 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                     <div className="flex items-center gap-2 rounded-lg border border-crimson-500/20 bg-crimson-500/[0.06] px-3.5 py-2.5">
                       <Sparkles className="h-3.5 w-3.5 flex-shrink-0 text-crimson-400" />
                       <p className="text-xs text-crimson-300">
-                        DeepSeek AI is structuring your resume data — this usually takes 5–15 seconds
+                        Structuring your resume data — this usually takes 5–15 seconds
                       </p>
                     </div>
                   )}

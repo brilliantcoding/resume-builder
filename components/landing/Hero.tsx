@@ -26,7 +26,7 @@ export function Hero() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-crimson-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-crimson-500" />
               </div>
-              <span>Powered by DeepSeek AI</span>
+              <span>AI-powered resume building</span>
               <span className="ml-0.5 rounded-full bg-gradient-to-r from-crimson-600 to-crimson-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-lg animate-badge-pulse shadow-[0_0_15px_rgba(20,184,166,0.45)]">
                 NEW
               </span>

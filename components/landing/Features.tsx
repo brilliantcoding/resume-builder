@@ -5,7 +5,7 @@ const features = [
     icon: Sparkles,
     number: '01',
     title: 'AI Content Generation',
-    description: 'Generate professional summaries, improve bullet points, and get skill suggestions — powered by DeepSeek AI. Zero writer\'s block.',
+    description: 'Generate professional summaries, improve bullet points, and get skill suggestions with AI-powered tools. Zero writer\'s block.',
     accent: 'from-crimson-500 via-amber-500 to-fuchsia-600',
     iconBg: 'bg-crimson-500/20',
     iconColor: 'text-crimson-300',

@@ -48,7 +48,7 @@ export function Footer() {
             {/* Powered by badge */}
             <div className="mb-6 inline-flex items-center gap-2 rounded-xl border border-crimson-500/25 bg-crimson-500/[0.12] px-3 py-1.5 text-xs font-medium text-crimson-300 backdrop-blur-sm shadow-[0_0_20px_rgba(20,184,166,0.2)]">
               <Zap className="h-3 w-3 text-crimson-300" />
-              <span>Powered by DeepSeek AI</span>
+              <span>AI-powered resume tools</span>
             </div>
 
             {/* Socials */}
@@ -94,7 +94,7 @@ export function Footer() {
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <span className="text-crimson-300">Built with Next.js</span>
             <span className="text-amber-500">·</span>
-            <span className="text-orange-300">AI by DeepSeek</span>
+            <span className="text-orange-300">AI-assisted tools</span>
           </div>
         </div>
       </div>
