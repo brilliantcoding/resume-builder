@@ -20,6 +20,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Local model configuration
+
+The app uses an OpenAI-compatible chat completions endpoint. Configure `LOCAL_AI_BASE_URL` and `LOCAL_AI_API_KEY` for that endpoint, and set `LOCAL_AI_MODEL` in `.env` to an exact model ID it serves. There is no model fallback: the app reports a configuration error if `LOCAL_AI_MODEL` is missing.
+
+AI requests disable optional model thinking through a chat-template hint supported by the local inference server. This leaves the output-token budget for the requested result instead of consuming it on reasoning. The hint is ignored by models that do not use a thinking mode.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
