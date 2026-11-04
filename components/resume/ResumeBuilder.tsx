@@ -236,20 +236,24 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
         {/* Top bar */}
         <div className="border-b border-white/[0.06] bg-card px-4 py-3">
           <div className="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
-            <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="flex items-center gap-3">
               <Input
                 value={title}
                 onChange={(e) => updateTitle(e.target.value)}
-                className="max-w-xs rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 font-semibold text-slate-100 focus:border-crimson-500"
+                className="max-w-xs rounded-lg border-0 bg-transparent px-0 font-semibold text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-crimson-500"
               />
-              <span className="hidden text-xs text-slate-500 sm:block">
-                {saving ? 'Saving...' : saved ? (
-                  <span className="flex items-center gap-1 text-emerald-400"><Check className="h-3 w-3" /> Saved</span>
-                ) : 'Unsaved changes'}
-              </span>
             </div>
 
             <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg">
+                {saving ? (
+                  <span className="text-xs text-crimson-400 animate-pulse">Saving...</span>
+                ) : saved ? (
+                  <span className="text-xs text-emerald-400 flex items-center gap-1"><Check className="h-3 w-3" /> Saved</span>
+                ) : (
+                  <span className="text-xs text-amber-400">Unsaved changes</span>
+                )}
+              </div>
               <Button variant="ghost" size="sm" onClick={() => setShowTailor(true)}>
                 <Sparkles className="h-4 w-4 text-crimson-400" />
                 <span className="hidden sm:inline">Tailor to Job</span>
@@ -262,11 +266,11 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
                 {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 <span className="hidden sm:inline">{showPreview ? 'Hide' : 'Show'} Preview</span>
               </Button>
-              <Button size="sm" onClick={exportPDF} loading={exporting} variant="secondary">
+              <Button variant="secondary" size="sm" onClick={exportPDF} loading={exporting}>
                 <Download className="h-4 w-4" />
                 <span className="hidden sm:inline">Export PDF</span>
               </Button>
-              <Button size="sm" onClick={() => save(data, template, title)} loading={saving}>
+              <Button variant="primary" size="sm" onClick={() => save(data, template, title)} loading={saving}>
                 <Save className="h-4 w-4" />
                 Save
               </Button>
