@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
-import { Plus, FileText, Trash2, Pencil, Clock, Upload, Sparkles, TrendingUp, LayoutGrid } from 'lucide-react'
+import { Plus, FileText, Trash2, Pencil, Clock, Sparkles, TrendingUp, LayoutGrid } from 'lucide-react'
 import { UploadResumeButton } from '@/components/dashboard/UploadResumeButton'
 
 interface ResumeCard {

@@ -5,20 +5,24 @@ interface Props { data: ResumeData; scale?: number }
 const CRIMSON = '#b91c1c'
 const CRIMSON_LIGHT = '#fee2e2'
 
-export function CompactTemplate({ data, scale = 1 }: Props) {
-  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
-
-  const LeftSection = ({ title }: { title: string }) => (
+function LeftSection({ title }: { title: string }) {
+  return (
     <div style={{ background: CRIMSON, padding: '4px 10px', marginBottom: '8px', marginTop: '14px', borderRadius: '3px' }}>
       <h3 style={{ fontSize: '8px', fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: '1.5px', color: 'white' }}>{title}</h3>
     </div>
   )
+}
 
-  const RightSection = ({ title }: { title: string }) => (
+function RightSection({ title }: { title: string }) {
+  return (
     <div style={{ borderBottom: `2px solid ${CRIMSON}`, marginBottom: '8px', marginTop: '14px', paddingBottom: '3px' }}>
       <h2 style={{ fontSize: '9.5px', fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: '1.5px', color: CRIMSON }}>{title}</h2>
     </div>
   )
+}
+
+export function CompactTemplate({ data, scale = 1 }: Props) {
+  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
 
   return (
     <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '10px', lineHeight: '1.5', color: '#1a1a1a', background: 'white', minHeight: '297mm' }}>

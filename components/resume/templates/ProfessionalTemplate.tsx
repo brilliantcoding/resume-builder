@@ -2,15 +2,17 @@ import { ResumeData } from '@/types/resume'
 
 interface Props { data: ResumeData; scale?: number }
 
-export function ProfessionalTemplate({ data, scale = 1 }: Props) {
-  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
-
-  const SectionTitle = ({ children }: { children: string }) => (
+function SectionTitle({ children }: { children: string }) {
+  return (
     <div style={{ marginBottom: '6px', marginTop: '14px' }}>
       <h2 style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', color: '#1a1a1a', marginBottom: '3px' }}>{children}</h2>
       <div style={{ borderBottom: '1px solid #1a1a1a' }} />
     </div>
   )
+}
+
+export function ProfessionalTemplate({ data, scale = 1 }: Props) {
+  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
 
   const allSkills = skills.flatMap(g => g.skills)
   const hasCategories = skills.some(g => g.category && g.category.trim())

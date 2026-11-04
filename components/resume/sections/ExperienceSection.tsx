@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { ExperienceEntry } from '@/types/resume'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { AIButton } from '@/components/ui/AIButton'
 import { Plus, Trash2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 
 function newEntry(): ExperienceEntry {

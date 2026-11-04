@@ -261,7 +261,6 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                     {STEPS.map((step, i) => {
                       const done = completedSteps.has(step.key)
                       const active = activeStep === step.key && !done
-                      const pending = !done && !active
 
                       return (
                         <div

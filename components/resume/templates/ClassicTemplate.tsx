@@ -2,14 +2,16 @@ import { ResumeData } from '@/types/resume'
 
 interface Props { data: ResumeData; scale?: number }
 
-export function ClassicTemplate({ data, scale = 1 }: Props) {
-  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
-
-  const SectionTitle = ({ children }: { children: string }) => (
+function SectionTitle({ children }: { children: string }) {
+  return (
     <div style={{ borderBottom: '2px solid #1a1a1a', marginBottom: '8px', paddingBottom: '3px' }}>
       <h2 style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#1a1a1a' }}>{children}</h2>
     </div>
   )
+}
+
+export function ClassicTemplate({ data, scale = 1 }: Props) {
+  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
 
   return (
     <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', fontFamily: 'Georgia, serif', fontSize: '10px', lineHeight: '1.5', color: '#1a1a1a', background: 'white', padding: '36px 40px', minHeight: '297mm' }}>

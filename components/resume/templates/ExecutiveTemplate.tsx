@@ -5,19 +5,23 @@ interface Props { data: ResumeData; scale?: number }
 const NAVY = '#1e3558'
 const ACCENT = '#4f8ef7'
 
-export function ExecutiveTemplate({ data, scale = 1 }: Props) {
-  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
-
-  const SideSection = ({ title }: { title: string }) => (
+function SideSection({ title }: { title: string }) {
+  return (
     <p style={{ fontSize: '7.5px', fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: '1.5px', color: ACCENT, marginBottom: '7px', marginTop: '18px' }}>{title}</p>
   )
+}
 
-  const MainSection = ({ title }: { title: string }) => (
+function MainSection({ title }: { title: string }) {
+  return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', marginTop: '18px' }}>
       <div style={{ width: '3px', height: '14px', background: ACCENT, borderRadius: '2px', flexShrink: 0 }} />
       <h2 style={{ fontSize: '9.5px', fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: '1.5px', color: NAVY }}>{title}</h2>
     </div>
   )
+}
+
+export function ExecutiveTemplate({ data, scale = 1 }: Props) {
+  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
 
   return (
     <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '10px', lineHeight: '1.5', color: '#1a1a1a', background: 'white', minHeight: '297mm', display: 'flex' }}>

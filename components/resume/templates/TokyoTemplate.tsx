@@ -30,7 +30,7 @@ function SkillDots({ count = 4, total = 5 }: { count?: number; total?: number })
   )
 }
 
-function Section({ title, children, noBorder = false }: { title: string; children: React.ReactNode; noBorder?: boolean }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: '16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>

@@ -127,20 +127,23 @@ Critical rules:
 - Return ONLY the JSON object. No markdown fences, no explanation, no trailing text.`
 
 // Post-process parsed data: fix empty bullets, bad IDs, etc.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function sanitizeParsed(parsed: any): ResumeData {
-  const base = { ...defaultResumeData, ...parsed }
+function sanitizeParsed(parsed: unknown): ResumeData {
+  // Ensure parsed is an object before spreading
+  const parsedObj = parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {}
+  const base = { ...defaultResumeData, ...parsedObj } as ResumeData
 
   // Fix experience bullets
-  base.experience = (parsed.experience ?? []).map((e: any, i: number) => {
-    let bullets: string[] = Array.isArray(e.bullets) ? e.bullets : []
+  const experienceArray = Array.isArray(parsedObj.experience) ? parsedObj.experience : []
+  base.experience = experienceArray.map((e: unknown, i: number) => {
+    const entry = e as { id?: string; company?: string; position?: string; startDate?: string; endDate?: string; current?: boolean; description?: string; bullets?: string[] }
+    let bullets: string[] = Array.isArray(entry.bullets) ? entry.bullets : []
 
     // Filter out empty/whitespace-only bullets
-    bullets = bullets.map((b: string) => String(b).trim()).filter((b: string) => b.length > 0)
+    bullets = bullets.map((b) => String(b).trim()).filter((b) => b.length > 0)
 
     // If bullets are empty but description has content, split description into bullets
-    if (bullets.length === 0 && e.description?.trim()) {
-      bullets = e.description
+    if (bullets.length === 0 && entry.description?.trim()) {
+      bullets = String(entry.description)
         .split(/\n|•|–|▪|·|\*/)
         .map((s: string) => s.trim())
         .filter((s: string) => s.length > 5)
@@ -150,56 +153,76 @@ function sanitizeParsed(parsed: any): ResumeData {
     if (bullets.length === 0) bullets = ['']
 
     return {
-      id: e.id || `exp${i + 1}`,
-      company: e.company ?? '',
-      position: e.position ?? '',
-      startDate: e.startDate ?? '',
-      endDate: e.endDate ?? '',
-      current: !!e.current,
+      id: entry.id || `exp${i + 1}`,
+      company: entry.company ?? '',
+      position: entry.position ?? '',
+      startDate: entry.startDate ?? '',
+      endDate: entry.endDate ?? '',
+      current: !!entry.current,
       description: '',  // always blank — content lives in bullets
       bullets,
     }
   })
 
   // Fix education IDs
-  base.education = (parsed.education ?? []).map((e: any, i: number) => ({
-    id: e.id || `edu${i + 1}`,
-    institution: e.institution ?? '',
-    degree: e.degree ?? '',
-    field: e.field ?? '',
-    startDate: e.startDate ?? '',
-    endDate: e.endDate ?? '',
-    gpa: e.gpa ?? '',
-    honors: e.honors ?? '',
-  }))
+  const educationArray = Array.isArray(parsedObj.education) ? parsedObj.education : []
+  base.education = educationArray.map((e: unknown, i: number) => {
+    const entry = e as { id?: string; institution?: string; degree?: string; field?: string; startDate?: string; endDate?: string; gpa?: string; honors?: string }
+    return {
+      id: entry.id || `edu${i + 1}`,
+      institution: entry.institution ?? '',
+      degree: entry.degree ?? '',
+      field: entry.field ?? '',
+      startDate: entry.startDate ?? '',
+      endDate: entry.endDate ?? '',
+      gpa: entry.gpa ?? '',
+      honors: entry.honors ?? '',
+    }
+  })
 
   // Fix skill groups — remove groups with no skills
-  base.skills = (parsed.skills ?? [])
-    .map((g: any, i: number) => ({
-      id: g.id || `sk${i + 1}`,
-      category: g.category ?? '',
-      skills: Array.isArray(g.skills) ? g.skills.map((s: any) => String(s).trim()).filter(Boolean) : [],
-    }))
-    .filter((g: any) => g.skills.length > 0)
+  const skillsArray = Array.isArray(parsedObj.skills) ? parsedObj.skills : []
+  base.skills = skillsArray
+    .map((g: unknown, i: number) => {
+      const group = g as { id?: string; category?: string; skills?: unknown[] }
+      const skillsArray = Array.isArray(group.skills) ? group.skills : []
+      return {
+        id: group.id || `sk${i + 1}`,
+        category: group.category ?? '',
+        skills: skillsArray.map((s: unknown) => String(s).trim()).filter(Boolean),
+      }
+    })
+    .filter((g: { skills: unknown[] }) => g.skills.length > 0)
 
   // Fix projects
-  base.projects = (parsed.projects ?? []).map((p: any, i: number) => ({
-    id: p.id || `proj${i + 1}`,
-    name: p.name ?? '',
-    description: p.description ?? '',
-    technologies: Array.isArray(p.technologies) ? p.technologies.map((t: any) => String(t).trim()).filter(Boolean) : [],
-    url: p.url ?? '',
-    github: p.github ?? '',
-  }))
+  const projectsArray = Array.isArray(parsedObj.projects) ? parsedObj.projects : []
+  base.projects = projectsArray.map((p: unknown, i: number) => {
+    const project = p as { id?: string; name?: string; description?: string; technologies?: unknown[]; url?: string; github?: string }
+    const techArray = Array.isArray(project.technologies) ? project.technologies : []
+    return {
+      id: project.id || `proj${i + 1}`,
+      name: project.name ?? '',
+      description: project.description ?? '',
+      technologies: techArray.map((t: unknown) => String(t).trim()).filter(Boolean),
+      url: project.url ?? '',
+      github: project.github ?? '',
+    }
+  })
 
   // Fix certifications — this is the section most often missing or malformed
-  base.certifications = (parsed.certifications ?? []).map((c: any, i: number) => ({
-    id: c.id || `cert${i + 1}`,
-    name: c.name ?? c.title ?? c.certification ?? '',
-    issuer: c.issuer ?? c.organization ?? c.provider ?? '',
-    date: c.date ?? c.year ?? c.issued ?? '',
-    url: c.url ?? c.link ?? '',
-  })).filter((c: any) => c.name.trim().length > 0)
+  const certificationsArray = Array.isArray(parsedObj.certifications) ? parsedObj.certifications : []
+  base.certifications = certificationsArray
+    .map((c: unknown, i: number) => {
+      const cert = c as { id?: string; name?: string; issuer?: string; date?: string; title?: string; organization?: string; provider?: string; url?: string; link?: string; year?: string; issued?: string; certification?: string }
+      return {
+        id: cert.id || `cert${i + 1}`,
+        name: cert.name ?? cert.title ?? cert.certification ?? '',
+        issuer: cert.issuer ?? cert.organization ?? cert.provider ?? '',
+        date: cert.date ?? cert.year ?? cert.issued ?? '',
+        url: cert.url ?? cert.link ?? '',
+      }
+    })
+    .filter((c: { name: string }) => c.name.trim().length > 0)
 
   return base as ResumeData
 }

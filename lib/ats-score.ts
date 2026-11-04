@@ -86,7 +86,7 @@ export function calculateATSScore(data: ResumeData): ATSResult {
     total >= 50 ? 'fair' :
     'poor'
 
-  const suggestions = buildSuggestions(categories, data)
+  const suggestions = buildSuggestions(categories)
 
   return { total, grade, categories, suggestions }
 }
@@ -282,7 +282,7 @@ function scoreSummary(data: ResumeData): ScoreCategory {
 
 // ── Suggestion builder ─────────────────────────────────────────────────────
 
-function buildSuggestions(categories: ScoreCategory[], data: ResumeData): Suggestion[] {
+function buildSuggestions(categories: ScoreCategory[]): Suggestion[] {
   const suggestions: Suggestion[] = []
 
   for (const cat of categories) {

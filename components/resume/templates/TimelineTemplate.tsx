@@ -5,14 +5,14 @@ interface Props { data: ResumeData; scale?: number }
 const TEAL = '#0d9488'
 const LIGHT_TEAL = '#ccfbf1'
 
-export function TimelineTemplate({ data, scale = 1 }: Props) {
-  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
-
-  const SectionTitle = ({ children }: { children: string }) => (
+function SectionTitle({ children }: { children: string }) {
+  return (
     <h2 style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase' as const, letterSpacing: '2px', color: TEAL, marginBottom: '12px', marginTop: '20px' }}>{children}</h2>
   )
+}
 
-  const TimelineItem = ({ left, right, sub, children }: { left: string; right: string; sub?: string; children?: React.ReactNode }) => (
+function TimelineItem({ left, right, sub, children }: { left: string; right: string; sub?: string; children?: React.ReactNode }) {
+  return (
     <div style={{ display: 'flex', gap: '0', marginBottom: '14px' }}>
       {/* Timeline spine */}
       <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', marginRight: '14px', flexShrink: 0 }}>
@@ -29,6 +29,10 @@ export function TimelineTemplate({ data, scale = 1 }: Props) {
       </div>
     </div>
   )
+}
+
+export function TimelineTemplate({ data, scale = 1 }: Props) {
+  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
 
   return (
     <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', fontFamily: "'Segoe UI', Arial, sans-serif", fontSize: '10px', lineHeight: '1.5', color: '#1a1a1a', background: 'white', padding: '36px 44px', minHeight: '297mm' }}>

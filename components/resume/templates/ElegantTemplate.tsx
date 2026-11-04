@@ -3,18 +3,19 @@ import { ResumeData } from '@/types/resume'
 interface Props { data: ResumeData; scale?: number }
 
 const GOLD = '#92712a'
-const GOLD_LIGHT = '#f5efe0'
 
-export function ElegantTemplate({ data, scale = 1 }: Props) {
-  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
-
-  const SectionTitle = ({ children }: { children: string }) => (
+function SectionTitle({ children }: { children: string }) {
+  return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', marginTop: '22px' }}>
       <div style={{ flex: 1, height: '1px', background: GOLD, opacity: 0.4 }} />
       <h2 style={{ fontSize: '9px', fontWeight: '400', textTransform: 'uppercase' as const, letterSpacing: '3px', color: GOLD, whiteSpace: 'nowrap' as const }}>{children}</h2>
       <div style={{ flex: 1, height: '1px', background: GOLD, opacity: 0.4 }} />
     </div>
   )
+}
+
+export function ElegantTemplate({ data, scale = 1 }: Props) {
+  const { personalInfo: p, summary, experience, education, skills, projects, certifications } = data
 
   return (
     <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', fontFamily: 'Palatino Linotype, Palatino, Georgia, serif', fontSize: '10px', lineHeight: '1.6', color: '#2c2c2c', background: 'white', padding: '48px 52px', minHeight: '297mm' }}>
