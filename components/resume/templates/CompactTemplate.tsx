@@ -32,7 +32,7 @@ export function CompactTemplate({ data, scale = 1 }: Props) {
         <h1 style={{ fontSize: '22px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '3px', color: 'white' }}>{p.fullName || 'Your Name'}</h1>
         {p.jobTitle && <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.8)', fontWeight: '400' }}>{p.jobTitle}</p>}
         <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '14px', marginTop: '8px' }}>
-          {[p.phone, p.email, p.location, p.linkedin, p.github].filter(Boolean).map((v, i) => (
+          {[p.phone, p.email, p.location, p.linkedin, p.github, p.website].filter(Boolean).map((v, i) => (
             <span key={i} style={{ fontSize: '8px', color: 'rgba(255,255,255,0.85)' }}>{v}</span>
           ))}
         </div>
@@ -42,7 +42,7 @@ export function CompactTemplate({ data, scale = 1 }: Props) {
       <div style={{ display: 'flex', minHeight: 'calc(297mm - 80px)' }}>
 
         {/* Left column — 36% */}
-        <div style={{ width: '36%', minWidth: '36%', background: '#faf9ff', borderRight: '1px solid #ede9fe', padding: '16px 14px' }}>
+        <div style={{ width: '36%', minWidth: '36%', background: '#f4fbf6', borderRight: '1px solid #d6f1df', padding: '16px 14px' }}>
 
           {skills.length > 0 && (
             <>
@@ -69,6 +69,7 @@ export function CompactTemplate({ data, scale = 1 }: Props) {
                   <p style={{ fontSize: '7.5px', color: '#555', lineHeight: '1.5' }}>{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</p>
                   <p style={{ fontSize: '7.5px', color: '#888' }}>{edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}</p>
                   {edu.gpa && <p style={{ fontSize: '7px', color: '#aaa' }}>GPA: {edu.gpa}</p>}
+                  {edu.honors && <p style={{ fontSize: '7px', color: '#aaa' }}>{edu.honors}</p>}
                 </div>
               ))}
             </>
@@ -125,6 +126,9 @@ export function CompactTemplate({ data, scale = 1 }: Props) {
                     {proj.technologies.length > 0 && <span style={{ fontSize: '7.5px', color: '#888' }}>{proj.technologies.join(', ')}</span>}
                   </div>
                   <p style={{ fontSize: '8px', marginTop: '2px', lineHeight: '1.6', color: '#444' }}>{proj.description}</p>
+                  {(proj.url || proj.github) && (
+                    <p style={{ fontSize: '7.5px', color: CRIMSON, marginTop: '1px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+                  )}
                 </div>
               ))}
             </div>

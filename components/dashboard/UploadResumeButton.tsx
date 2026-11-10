@@ -1,10 +1,14 @@
 'use client'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Upload, FileUp, X, CheckCircle, AlertCircle, FileText, Sparkles, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
-type Stage = 'idle' | 'dragging' | 'uploading' | 'parsing' | 'done' | 'error'
+type Stage = 'idle' | 'dragging' | 'uploading' | 'parsing' | 'done' | 'error' | 'retrying'
+
+// Total tries = initial + (MAX_ATTEMPTS - 1) automatic retries for retryable server errors
+const MAX_ATTEMPTS = 3
+const RETRY_WAITS_SEC = [3, 8]
 
 // Steps shown in the progress view — each maps to a visual row
 const STEPS = [
@@ -35,6 +39,22 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
   const [error, setError] = useState('')
   const [showModal, setShowModal] = useState(false)
 
+  // Retry machinery for retryable AI/server failures
+  const [file, setFile] = useState<File | null>(null)
+  const [attempt, setAttempt] = useState(1)
+  const [retryIn, setRetryIn] = useState(0)
+  const attemptRef = useRef(1)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const fileRef = useRef<File | null>(null)
+
+  useEffect(() => {
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current) }
+  }, [])
+
+  function clearCountdown() {
+    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null }
+  }
+
   function openModal() {
     setShowModal(true)
     setStage('idle')
@@ -45,8 +65,14 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
     setUploadedBytes(0)
     setActiveStep('upload')
     setCompletedSteps(new Set())
+    setFile(null)
+    fileRef.current = null
+    attemptRef.current = 1
+    setAttempt(1)
+    setRetryIn(0)
+    clearCountdown()
   }
-  function closeModal() { setShowModal(false) }
+  function closeModal() { clearCountdown(); setShowModal(false) }
 
   function completeStep(key: StepKey) {
     setCompletedSteps(prev => new Set([...prev, key]))
@@ -66,13 +92,26 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
       return
     }
 
-    setFileName(file.name)
-    setFileSize(file.size)
+    setFile(file)
+    fileRef.current = file
+    attemptRef.current = 1
+    setAttempt(1)
+    upload(file, 1)
+  }
+
+  function upload(f: File, tryNumber: number) {
+    setFileName(f.name)
+    setFileSize(f.size)
     setStage('uploading')
     setActiveStep('upload')
+    setCompletedSteps(new Set())
+    setUploadPct(0)
+    setUploadedBytes(0)
+    setRetryIn(0)
+    clearCountdown()
 
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', f)
 
     const xhr = new XMLHttpRequest()
 
@@ -100,16 +139,25 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
     })
 
     xhr.addEventListener('load', () => {
+      let body: { id?: string; title?: string; warning?: string; error?: string; code?: string; retryable?: boolean } = {}
+      try { body = JSON.parse(xhr.responseText) } catch { /* ignore */ }
+
       if (xhr.status < 200 || xhr.status >= 300) {
-        let msg = 'Upload failed'
-        try { msg = JSON.parse(xhr.responseText)?.error || msg } catch { /* ignore */ }
-        setStage('error')
-        setError(msg)
+        const msg = body.error || 'Upload failed'
+        // Failed parse must NOT navigate — stay in modal, retry with backoff when safe
+        if (body.retryable && tryNumber < MAX_ATTEMPTS) {
+          setError(msg)
+          scheduleRetry(tryNumber, msg)
+        } else {
+          setStage('error')
+          setError(body.retryable
+            ? `${msg} (still failing after ${MAX_ATTEMPTS} attempts)`
+            : msg)
+        }
         return
       }
 
-      let data: { id?: string; title?: string; warning?: string } = {}
-      try { data = JSON.parse(xhr.responseText) } catch { /* ignore */ }
+      const data = body
 
       // Mark parse + save as complete
       completeStep('parse')
@@ -125,12 +173,51 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
     })
 
     xhr.addEventListener('error', () => {
-      setStage('error')
-      setError('Network error. Please check your connection and try again.')
+      const msg = 'Network error. Check your connection and the AI server.'
+      if (tryNumber < MAX_ATTEMPTS) {
+        setError(msg)
+        scheduleRetry(tryNumber, msg)
+      } else {
+        setStage('error')
+        setError(msg)
+      }
     })
 
     xhr.open('POST', '/api/resume/upload')
     xhr.send(formData)
+  }
+
+  function scheduleRetry(failedAttempt: number, msg: string) {
+    const wait = RETRY_WAITS_SEC[Math.min(failedAttempt - 1, RETRY_WAITS_SEC.length - 1)]
+    attemptRef.current = failedAttempt + 1
+    setAttempt(failedAttempt + 1)
+    setStage('retrying')
+    setError(msg)
+    let remaining = wait
+    setRetryIn(remaining)
+    clearCountdown()
+    countdownRef.current = setInterval(() => {
+      remaining -= 1
+      setRetryIn(remaining)
+      if (remaining <= 0) {
+        clearCountdown()
+        const f = fileRef.current
+        if (f) upload(f, attemptRef.current)
+      }
+    }, 1000)
+  }
+
+  function retryNow() {
+    clearCountdown()
+    setRetryIn(0)
+    const f = fileRef.current
+    if (f) upload(f, attemptRef.current)
+  }
+
+  function cancelRetry() {
+    clearCountdown()
+    setRetryIn(0)
+    setStage('error')
   }
 
   function onDrop(e: React.DragEvent) {
@@ -172,7 +259,7 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                 <h2 className="font-display text-xl font-bold text-slate-100">Upload Existing Resume</h2>
                 <p className="mt-0.5 text-sm text-slate-500">AI will extract and convert it to our format</p>
               </div>
-              {(stage === 'idle' || stage === 'dragging' || stage === 'error') && (
+              {(stage === 'idle' || stage === 'dragging' || stage === 'error' || stage === 'retrying') && (
                 <button onClick={closeModal} className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-white/[0.06] hover:text-slate-200">
                   <X className="h-5 w-5" />
                 </button>
@@ -345,15 +432,40 @@ export function UploadResumeButton({ asCard = false }: { asCard?: boolean }) {
                 </div>
               )}
 
+              {/* ── Auto-retry with backoff ── */}
+              {stage === 'retrying' && (
+                <div className="py-8 text-center">
+                  <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/15">
+                    <AlertCircle className="h-8 w-8 text-amber-400" />
+                  </div>
+                  <p className="mb-1 text-base font-semibold text-slate-100">Import hit a problem</p>
+                  <p className="mb-4 text-sm text-amber-400/90">{error}</p>
+                  <p className="text-sm text-slate-400">
+                    Retrying automatically in{' '}
+                    <span className="font-semibold tabular-nums text-slate-100">{retryIn}s</span>
+                    {' '}· attempt {attempt} of {MAX_ATTEMPTS}
+                  </p>
+                  <div className="mt-5 flex items-center justify-center gap-3">
+                    <Button variant="outline" onClick={retryNow}>Retry now</Button>
+                    <Button variant="ghost" onClick={cancelRetry}>Cancel</Button>
+                  </div>
+                </div>
+              )}
+
               {/* ── Error ── */}
               {stage === 'error' && (
                 <div className="py-8 text-center">
                   <div className="mx-auto mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-red-500/15">
                     <AlertCircle className="h-8 w-8 text-red-400" />
                   </div>
-                  <p className="mb-2 text-base font-semibold text-slate-100">Upload failed</p>
+                  <p className="mb-2 text-base font-semibold text-slate-100">Import failed</p>
                   <p className="mb-6 text-sm text-red-400">{error}</p>
-                  <Button variant="outline" onClick={() => setStage('idle')}>Try again</Button>
+                  <div className="flex items-center justify-center gap-3">
+                    {file && (
+                      <Button variant="outline" onClick={() => upload(file, 1)}>Try again</Button>
+                    )}
+                    <Button variant={file ? 'ghost' : 'outline'} onClick={() => setStage('idle')}>Choose another file</Button>
+                  </div>
                 </div>
               )}
 

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { ResumeData, TemplateId, defaultResumeData } from '@/types/resume'
 import { Navbar } from '@/components/layout/Navbar'
 import { Button } from '@/components/ui/Button'
-import { TemplatePicker } from './TemplatePicker'
+import { TemplatePicker, getTemplateName } from './TemplatePicker'
 import { ResumePreview } from './ResumePreview'
 import { PersonalInfoSection } from './sections/PersonalInfoSection'
 import { SummarySection } from './sections/SummarySection'
@@ -46,7 +46,9 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
   const [showTailor, setShowTailor] = useState(false)
   const [showATS, setShowATS] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [switchedTo, setSwitchedTo] = useState<string | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(null)
+  const switchToastTimer = useRef<ReturnType<typeof setTimeout>>(null)
 
   const save = useCallback(async (d: ResumeData, t: TemplateId, ti: string) => {
     setSaving(true)
@@ -76,6 +78,11 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
   const updateTemplate = (t: TemplateId) => {
     setTemplate(t)
     triggerAutoSave(data, t, title)
+    if (t !== template) {
+      setSwitchedTo(getTemplateName(t))
+      if (switchToastTimer.current) clearTimeout(switchToastTimer.current)
+      switchToastTimer.current = setTimeout(() => setSwitchedTo(null), 2400)
+    }
   }
 
   const updateTitle = (t: string) => {
@@ -234,7 +241,7 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
 
       <div className="flex-1 bg-background">
         {/* Top bar */}
-        <div className="border-b border-white/[0.06] bg-card px-4 py-3">
+        <div className="sticky top-[68px] z-30 border-b border-default bg-card px-4 py-3">
           <div className="mx-auto flex max-w-screen-2xl items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Input
@@ -279,11 +286,7 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
         </div>
 
         <div className="mx-auto max-w-screen-2xl px-4 py-6">
-          {/* Template Picker */}
-          <div className="mb-6 rounded-xl border border-white/[0.07] bg-card p-4">
-            <p className="mb-3 text-sm font-medium text-slate-400">Template</p>
-            <TemplatePicker value={template} onChange={updateTemplate} />
-          </div>
+          <TemplatePicker value={template} onChange={updateTemplate} />
 
           {/* ATS Score Panel */}
           {showATS && (
@@ -347,10 +350,10 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
 
             {/* Preview */}
             {showPreview && (
-              <div className="sticky top-20 self-start">
+              <div className="sticky top-[124px] self-start">
                 <div className="rounded-xl border border-white/[0.07] bg-card p-4">
                   <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Live Preview</p>
-                  <div className="max-h-[calc(100vh-180px)] overflow-auto">
+                  <div className="max-h-[calc(100vh-208px)] overflow-auto">
                     <ResumePreview data={data} template={template} />
                   </div>
                 </div>
@@ -359,6 +362,17 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
           </div>
         </div>
       </div>
+
+      {switchedTo && (
+        <div className="fixed bottom-6 right-6 z-[80] flex items-center gap-2.5 rounded-full border border-crimson-500/30 bg-card px-4 py-2.5 shadow-2xl animate-slide-up" role="status">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-crimson-500 text-white">
+            <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+          </span>
+          <span className="text-sm font-medium text-slate-200">
+            Switched to <span className="text-crimson-400">{switchedTo}</span>
+          </span>
+        </div>
+      )}
     </>
   )
 }

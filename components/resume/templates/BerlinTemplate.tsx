@@ -109,6 +109,7 @@ export function BerlinTemplate({ data, scale = 1 }: Props) {
               { val: p.location, prefix: '⌖ ' },
               { val: p.linkedin, prefix: 'in ' },
               { val: p.github, prefix: '⌥ ' },
+              { val: p.website, prefix: '⊕ ' },
             ].filter(c => c.val).map(({ val, prefix }, i) => (
               <div key={i} style={{ display: 'flex', gap: '5px', alignItems: 'flex-start' }}>
                 <span style={{ fontSize: '8px', color: SIDEBAR_ACC, minWidth: '14px', marginTop: '1px', flexShrink: 0 }}>{prefix}</span>
@@ -160,6 +161,7 @@ export function BerlinTemplate({ data, scale = 1 }: Props) {
                   {edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}
                 </p>
                 {edu.gpa && <p style={{ fontSize: '7.5px', color: SIDEBAR_MUT }}>GPA {edu.gpa}</p>}
+                {edu.honors && <p style={{ fontSize: '7.5px', color: SIDEBAR_MUT }}>{edu.honors}</p>}
               </div>
             ))}
           </SidebarSection>
@@ -215,6 +217,9 @@ export function BerlinTemplate({ data, scale = 1 }: Props) {
                   )}
                 </div>
                 <p style={{ fontSize: '8.5px', color: BODY_TXT, lineHeight: '1.6' }}>{proj.description}</p>
+                {(proj.url || proj.github) && (
+                  <p style={{ fontSize: '8px', color: SIDEBAR_ACC, marginTop: '2px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+                )}
               </div>
             ))}
           </RightSection>

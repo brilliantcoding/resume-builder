@@ -34,10 +34,10 @@ export default function LoginPage() {
       {/* Left panel — branding */}
       <div className="relative hidden overflow-hidden p-12 lg:flex lg:w-5/12 xl:w-[45%] flex-col justify-between">
         {/* Layered background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-crimson-950/70 via-card to-amber-950/60" />
-        <div className="absolute inset-0 bg-cross-pattern opacity-30" />
-        <div className="animate-orb-drift pointer-events-none absolute -right-24 -top-24 h-[500px] w-[500px] rounded-full bg-crimson-600/20 blur-[120px]" />
-        <div className="animate-orb-drift-2 pointer-events-none absolute -bottom-24 -left-24 h-[400px] w-[400px] rounded-full bg-amber-600/15 blur-[100px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-crimson-950/70 via-card to-emerald-950/60" />
+        <div className="absolute inset-0 bg-cross-pattern opacity-40 [mask-image:radial-gradient(ellipse_80%_70%_at_30%_40%,black,transparent)]" />
+        <div className="animate-orb-drift pointer-events-none absolute -right-24 -top-24 h-[500px] w-[500px] rounded-full bg-crimson-500/15 blur-[130px]" />
+        <div className="animate-orb-drift-2 pointer-events-none absolute -bottom-24 -left-24 h-[400px] w-[400px] rounded-full bg-emerald-600/12 blur-[110px]" />
         {/* Right edge separator */}
         <div className="absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-transparent via-crimson-500/20 to-transparent" />
 
@@ -62,15 +62,15 @@ export default function LoginPage() {
             <span className="block gradient-text">get you hired</span>
           </h2>
           <p className="mb-8 text-secondary leading-relaxed">
-            AI-powered content, 9 professional templates, and one-click PDF export — all in one place.
+            AI-powered content, 15 professional templates, and one-click PDF export — all in one place.
           </p>
 
           {/* Feature cards */}
           <div className="space-y-3">
             {[
               { icon: Sparkles, label: 'AI generates your professional summary', color: 'text-crimson-400', bg: 'bg-crimson-500/10' },
-              { icon: TrendingUp, label: 'Tailors resume to any job description', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-              { icon: Download, label: 'ATS-optimized — get past filters', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+              { icon: TrendingUp, label: 'Tailors resume to any job description', color: 'text-crimson-400', bg: 'bg-crimson-500/10' },
+              { icon: Download, label: 'ATS-optimized — get past filters', color: 'text-crimson-400', bg: 'bg-crimson-500/10' },
             ].map(({ icon: Icon, label, color, bg }) => (
               <div key={label} className="flex items-center gap-3 rounded-xl border border-default bg-card px-4 py-3">
                 <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${bg}`}>

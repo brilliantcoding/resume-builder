@@ -118,6 +118,7 @@ export function SixtySecondsTemplate({ data, scale = 1 }: Props) {
               { label: p.location },
               { label: p.linkedin },
               { label: p.github },
+              { label: p.website },
             ].filter(c => c.label).map(({ label }, i) => (
               <p key={i} style={{ fontSize: '7.5px', color: SIDEBAR_TEXT, lineHeight: '1.4', wordBreak: 'break-all' }}>{label}</p>
             ))}
@@ -161,6 +162,7 @@ export function SixtySecondsTemplate({ data, scale = 1 }: Props) {
                   {edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}
                 </p>
                 {edu.gpa && <p style={{ fontSize: '7px', color: SIDEBAR_MUTED }}>GPA: {edu.gpa}</p>}
+                {edu.honors && <p style={{ fontSize: '7px', color: SIDEBAR_MUTED }}>{edu.honors}</p>}
               </div>
             ))}
           </div>
@@ -243,6 +245,9 @@ export function SixtySecondsTemplate({ data, scale = 1 }: Props) {
                   )}
                 </div>
                 <p style={{ fontSize: '8.5px', color: BODY_CLR, lineHeight: '1.6' }}>{proj.description}</p>
+                {(proj.url || proj.github) && (
+                  <p style={{ fontSize: '8px', color: ACCENT_DIM, marginTop: '2px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+                )}
               </div>
             ))}
           </div>

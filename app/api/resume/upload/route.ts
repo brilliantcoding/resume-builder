@@ -252,10 +252,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Could not extract text from file. Make sure it\'s not a scanned image PDF.' }, { status: 400 })
     }
 
-    // Parse with AI
-    let resumeData: ResumeData = defaultResumeData
-    let aiParseError: string | null = null
-
+    // Parse with AI — a failed parse must NOT create an empty resume
+    let resumeData: ResumeData
     try {
       const aiResponse = await chatForParsing({
         messages: [{ role: 'user', content: PARSE_PROMPT(rawText) }],
@@ -275,26 +273,55 @@ export async function POST(req: NextRequest) {
       const start = stripped.indexOf('{')
       const end = stripped.lastIndexOf('}')
 
-      if (start !== -1 && end !== -1 && end > start) {
-        const jsonStr = stripped.slice(start, end + 1)
-        try {
-          const parsed = JSON.parse(jsonStr)
-          resumeData = sanitizeParsed(parsed)
-          console.log('[Upload] Parsed OK — name:', resumeData.personalInfo?.fullName,
-            '| exp:', resumeData.experience.length,
-            '| certs:', resumeData.certifications.length,
-            '| bullets[0]:', resumeData.experience[0]?.bullets?.length ?? 0)
-        } catch (parseErr) {
-          console.error('[Upload] JSON.parse failed:', parseErr)
-          aiParseError = 'AI returned malformed JSON. The resume was created but you may need to fill in details manually.'
-        }
-      } else {
+      if (start === -1 || end <= start) {
         console.error('[Upload] No JSON object found in AI response. Response preview:', aiResponse.slice(0, 300))
-        aiParseError = 'AI did not return structured data. The resume was created but you may need to fill in details manually.'
+        return NextResponse.json(
+          { error: 'AI did not return structured data. Please try again.', code: 'AI_BAD_OUTPUT', retryable: true },
+          { status: 422 },
+        )
+      }
+
+      let parsed: unknown
+      try {
+        parsed = JSON.parse(stripped.slice(start, end + 1))
+      } catch (parseErr) {
+        console.error('[Upload] JSON.parse failed:', parseErr)
+        return NextResponse.json(
+          { error: 'AI returned malformed JSON. Please try again.', code: 'AI_BAD_OUTPUT', retryable: true },
+          { status: 422 },
+        )
+      }
+
+      resumeData = sanitizeParsed(parsed)
+      console.log('[Upload] Parsed OK — name:', resumeData.personalInfo?.fullName,
+        '| exp:', resumeData.experience.length,
+        '| certs:', resumeData.certifications.length,
+        '| bullets[0]:', resumeData.experience[0]?.bullets?.length ?? 0)
+
+      const looksEmpty = !resumeData.personalInfo?.fullName
+        && resumeData.experience.length === 0
+        && resumeData.skills.length === 0
+        && !resumeData.summary
+      if (looksEmpty) {
+        return NextResponse.json(
+          { error: 'AI extracted no usable content from this file. It may be a scanned image — try a text-based PDF.', code: 'AI_EMPTY_OUTPUT', retryable: true },
+          { status: 422 },
+        )
       }
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
       console.error('[Upload] AI parse error:', err)
-      aiParseError = 'AI parsing failed (model unavailable or API error). The resume was created but you may need to fill in details manually.'
+      const unavailable = /connection|network|ECONNREFUSED|ECONNRESET|ETIMEDOUT|timeout|fetch failed|401|403|Unauthorized|404|not found|model/i.test(msg)
+      return NextResponse.json(
+        {
+          error: unavailable
+            ? 'AI service is unavailable or misconfigured. Check the model server and try again.'
+            : 'AI parsing failed. Please try again.',
+          code: unavailable ? 'AI_UNAVAILABLE' : 'AI_PARSE_FAILED',
+          retryable: true,
+        },
+        { status: 502 },
+      )
     }
 
     // Derive title from name or filename
@@ -314,7 +341,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       id: resume.id,
       title: resume.title,
-      warning: aiParseError ?? undefined,
     })
   } catch (err) {
     console.error('Upload error:', err)

@@ -25,6 +25,7 @@ export function ClassicTemplate({ data, scale = 1 }: Props) {
           {p.location && <span>{p.location}</span>}
           {p.linkedin && <span>{p.linkedin}</span>}
           {p.github && <span>{p.github}</span>}
+          {p.website && <span>{p.website}</span>}
         </div>
       </div>
 
@@ -98,6 +99,9 @@ export function ClassicTemplate({ data, scale = 1 }: Props) {
               <span style={{ fontWeight: '700', fontSize: '10px' }}>{proj.name}</span>
               {proj.technologies.length > 0 && <span style={{ fontSize: '8.5px', color: '#555' }}> ({proj.technologies.join(', ')})</span>}
               <p style={{ fontSize: '9px', marginTop: '2px', lineHeight: '1.6' }}>{proj.description}</p>
+              {(proj.url || proj.github) && (
+                <p style={{ fontSize: '8.5px', color: '#1a6a48', marginTop: '1px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+              )}
             </div>
           ))}
         </div>
@@ -110,7 +114,7 @@ export function ClassicTemplate({ data, scale = 1 }: Props) {
           <ul style={{ paddingLeft: '14px', margin: '6px 0 0', listStyleType: 'disc' }}>
             {certifications.map((cert) => (
               <li key={cert.id} style={{ fontSize: '9px', lineHeight: '1.65', marginBottom: '2px' }}>
-                {cert.name}{cert.issuer ? ` (${cert.issuer})` : ''}
+                {cert.name}{cert.issuer || cert.date ? ` (${[cert.issuer, cert.date].filter(Boolean).join(' · ')})` : ''}
               </li>
             ))}
           </ul>

@@ -118,6 +118,9 @@ export function ExecutiveTemplate({ data, scale = 1 }: Props) {
                   {proj.technologies.length > 0 && <span style={{ fontSize: '8px', color: '#888' }}>{proj.technologies.join(', ')}</span>}
                 </div>
                 <p style={{ fontSize: '8.5px', marginTop: '2px', lineHeight: '1.6', color: '#444' }}>{proj.description}</p>
+                {(proj.url || proj.github) && (
+                  <p style={{ fontSize: '8px', color: ACCENT, marginTop: '1px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+                )}
               </div>
             ))}
           </div>

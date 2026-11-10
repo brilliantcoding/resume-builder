@@ -17,6 +17,7 @@ export function MinimalTemplate({ data, scale = 1 }: Props) {
           {p.location && <span>{p.location}</span>}
           {p.linkedin && <span>{p.linkedin}</span>}
           {p.github && <span>{p.github}</span>}
+          {p.website && <span>{p.website}</span>}
         </div>
         <div style={{ height: '2px', background: '#0d9488', marginTop: '14px' }} />
       </div>
@@ -61,7 +62,7 @@ export function MinimalTemplate({ data, scale = 1 }: Props) {
                 <div key={edu.id} style={{ marginBottom: '10px' }}>
                   <p style={{ fontWeight: '600', fontSize: '10px' }}>{edu.institution}</p>
                   <p style={{ fontSize: '9px', color: '#64748b' }}>{edu.degree}{edu.field ? ` · ${edu.field}` : ''}</p>
-                  <p style={{ fontSize: '8.5px', color: '#94a3b8' }}>{edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}{edu.gpa ? ` · GPA ${edu.gpa}` : ''}</p>
+                  <p style={{ fontSize: '8.5px', color: '#94a3b8' }}>{edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}{edu.gpa ? ` · GPA ${edu.gpa}` : ''}{edu.honors ? ` · ${edu.honors}` : ''}</p>
                 </div>
               ))}
             </div>
@@ -93,6 +94,9 @@ export function MinimalTemplate({ data, scale = 1 }: Props) {
               <span style={{ fontWeight: '600', fontSize: '10px' }}>{proj.name}</span>
               {proj.technologies.length > 0 && <span style={{ fontSize: '8.5px', color: '#94a3b8', marginLeft: '8px' }}>{proj.technologies.join(', ')}</span>}
               <p style={{ fontSize: '9px', color: '#475569', marginTop: '2px' }}>{proj.description}</p>
+              {(proj.url || proj.github) && (
+                <p style={{ fontSize: '8.5px', color: '#0d9488', marginTop: '1px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+              )}
             </div>
           ))}
         </div>

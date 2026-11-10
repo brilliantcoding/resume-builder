@@ -42,10 +42,10 @@ export default function RegisterPage() {
       </div>
       {/* Left panel — branding */}
       <div className="relative hidden overflow-hidden p-12 lg:flex lg:w-5/12 xl:w-[45%] flex-col justify-between">
-        <div className="absolute inset-0 bg-gradient-to-br from-crimson-950/70 via-card to-amber-950/60" />
-        <div className="absolute inset-0 bg-cross-pattern opacity-30" />
-        <div className="animate-orb-drift pointer-events-none absolute -right-24 -top-24 h-[500px] w-[500px] rounded-full bg-crimson-600/20 blur-[120px]" />
-        <div className="animate-orb-drift-2 pointer-events-none absolute -bottom-24 -left-24 h-[400px] w-[400px] rounded-full bg-amber-600/15 blur-[100px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-crimson-950/70 via-card to-emerald-950/60" />
+        <div className="absolute inset-0 bg-cross-pattern opacity-40 [mask-image:radial-gradient(ellipse_80%_70%_at_30%_40%,black,transparent)]" />
+        <div className="animate-orb-drift pointer-events-none absolute -right-24 -top-24 h-[500px] w-[500px] rounded-full bg-crimson-500/15 blur-[130px]" />
+        <div className="animate-orb-drift-2 pointer-events-none absolute -bottom-24 -left-24 h-[400px] w-[400px] rounded-full bg-emerald-600/12 blur-[110px]" />
         <div className="absolute bottom-0 right-0 top-0 w-px bg-gradient-to-b from-transparent via-crimson-500/20 to-transparent" />
 
         {/* Logo top */}
@@ -75,10 +75,10 @@ export default function RegisterPage() {
           {/* Perks grid */}
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: CheckCircle, label: 'Free forever', sub: 'No credit card', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-              { icon: Layout, label: '9 templates', sub: 'All ATS-ready', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+              { icon: CheckCircle, label: 'Free forever', sub: 'No credit card', color: 'text-crimson-400', bg: 'bg-crimson-500/10' },
+              { icon: Layout, label: '15 templates', sub: 'All ATS-ready', color: 'text-crimson-400', bg: 'bg-crimson-500/10' },
               { icon: Sparkles, label: 'AI writes it', sub: 'Zero effort', color: 'text-crimson-400', bg: 'bg-crimson-500/10' },
-              { icon: Download, label: 'PDF export', sub: 'One click', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+              { icon: Download, label: 'PDF export', sub: 'One click', color: 'text-crimson-400', bg: 'bg-crimson-500/10' },
             ].map(({ icon: Icon, label, sub, color, bg }) => (
               <div key={label} className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-3.5">
                 <div className={`mb-2 inline-flex h-7 w-7 items-center justify-center rounded-lg ${bg}`}>
@@ -93,8 +93,8 @@ export default function RegisterPage() {
 
         {/* Bottom stat */}
         <div className="relative flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
-            <Zap className="h-4 w-4 text-amber-400" />
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-crimson-500/10">
+            <Zap className="h-4 w-4 text-crimson-400" />
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-200">10,000+ resumes created</p>

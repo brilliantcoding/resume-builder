@@ -177,6 +177,7 @@ export function ViennaTemplate({ data, scale = 1 }: Props) {
                     {edu.startDate}{edu.startDate && edu.endDate ? '–' : ''}{edu.endDate}
                   </p>
                   {edu.gpa && <p style={{ fontSize: '7.5px', color: MUTED }}>GPA: {edu.gpa}</p>}
+                  {edu.honors && <p style={{ fontSize: '7.5px', color: MUTED }}>{edu.honors}</p>}
                 </div>
               ))}
             </LeftSection>
@@ -231,7 +232,10 @@ export function ViennaTemplate({ data, scale = 1 }: Props) {
                       </span>
                     )}
                   </div>
-                  <p style={{ fontSize: '8.5px', color: BODY, lineHeight: '1.65' }}>{proj.description}</p>
+                   <p style={{ fontSize: '8.5px', color: BODY, lineHeight: '1.65' }}>{proj.description}</p>
+                   {(proj.url || proj.github) && (
+                     <p style={{ fontSize: '8px', color: ACCENT, fontStyle: 'italic', marginTop: '2px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+                   )}
                 </div>
               ))}
             </RightSection>
@@ -242,7 +246,7 @@ export function ViennaTemplate({ data, scale = 1 }: Props) {
               <ul style={{ paddingLeft: '13px', margin: 0 }}>
                 {certifications.map((cert) => (
                   <li key={cert.id} style={{ fontSize: '8.5px', lineHeight: '1.7', marginBottom: '2px', color: BODY }}>
-                    {cert.name}{cert.issuer ? ` (${cert.issuer})` : ''}
+                    {cert.name}{cert.issuer || cert.date ? ` (${[cert.issuer, cert.date].filter(Boolean).join(' · ')})` : ''}
                   </li>
                 ))}
               </ul>

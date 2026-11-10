@@ -1,28 +1,48 @@
 'use client'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
-import { FileText, LogOut, LayoutDashboard, Sparkles, ChevronDown } from 'lucide-react'
+import { FileText, LogOut, LayoutDashboard, ArrowRight } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export function Navbar() {
   const { data: session } = useSession()
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
-    <nav className="site-navbar sticky top-0 z-50 glass border-b border-white/[0.05]">
-      {/* Thin accent line at top */}
-      <div className="h-px bg-gradient-to-r from-transparent via-crimson-500/50 to-transparent" />
+    <nav
+      data-scrolled={scrolled}
+      className={`site-navbar sticky top-0 z-50 transition-all duration-300 ${
+        scrolled ? 'border-b border-default shadow-[0_1px_0_rgba(48,164,108,0.12),0_8px_32px_rgba(0,0,0,0.14)]' : 'border-b border-transparent'
+      }`}
+    >
+      {/* Premium hairline */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-crimson-500/50 to-transparent" />
+
+      {/* Soft fade so content glides under the glass instead of hitting its edge */}
+      <div
+        aria-hidden
+        className={`nav-veil pointer-events-none absolute inset-x-0 top-full h-7 transition-opacity duration-500 ${scrolled ? 'opacity-100' : 'opacity-0'}`}
+      />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-[60px] items-center justify-between">
+        <div className="flex h-[68px] items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-crimson-500 to-crimson-700 shadow-sm shadow-crimson-500/30 transition-all duration-300 group-hover:shadow-crimson-500/50 group-hover:scale-105">
-              <FileText className="h-4 w-4 text-white" strokeWidth={2.2} />
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/20 to-transparent opacity-60" />
+          <Link href="/" className="group flex items-center gap-3">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-crimson-500 to-crimson-700 shadow-lg shadow-crimson-600/25 ring-1 ring-white/15 transition-all duration-300 group-hover:scale-105 group-hover:shadow-crimson-500/40">
+              <FileText className="h-[18px] w-[18px] text-white" strokeWidth={2.2} />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/25 to-transparent opacity-70" />
             </div>
-            <span className="font-display text-[17px] font-bold tracking-tight">
-              <span className="text-slate-100">Resume</span>
-              <span className="text-crimson-500">AI</span>
+            <span className="font-display text-[18px] font-bold tracking-tight">
+              <span className="text-primary">Resume</span>
+              <span className="gradient-text">AI</span>
             </span>
           </Link>
 
@@ -31,13 +51,13 @@ export function Navbar() {
             <div className="hidden md:flex items-center gap-1 text-sm font-medium">
               <Link
                 href="#features"
-                className="nav-underline rounded-lg px-3.5 py-2 text-slate-400 transition-colors hover:text-slate-100 hover:bg-white/[0.04]"
+                className="nav-underline rounded-full px-4 py-2 text-muted transition-colors hover:bg-crimson-500/[0.06] hover:text-primary"
               >
                 Features
               </Link>
               <Link
                 href="#templates"
-                className="nav-underline rounded-lg px-3.5 py-2 text-slate-400 transition-colors hover:text-slate-100 hover:bg-white/[0.04]"
+                className="nav-underline rounded-full px-4 py-2 text-muted transition-colors hover:bg-crimson-500/[0.06] hover:text-primary"
               >
                 Templates
               </Link>
@@ -45,43 +65,44 @@ export function Navbar() {
           )}
 
           {/* Right actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <ThemeToggle />
+            <div className="hidden sm:block h-5 w-px bg-white/10" />
 
             {session ? (
               <>
-                <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-sm text-slate-300">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-crimson-500 to-crimson-700 text-[10px] font-bold text-white">
+                <div className="hidden sm:flex items-center gap-2 rounded-full border border-default bg-crimson-500/[0.05] py-1.5 pl-1.5 pr-3.5 text-sm text-secondary">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-crimson-500 to-crimson-700 text-[10px] font-bold text-white ring-1 ring-white/15">
                     {(session.user?.name?.[0] || session.user?.email?.[0] || '?').toUpperCase()}
                   </div>
-                  <span className="font-medium">{session.user?.name?.split(' ')[0] || session.user?.email}</span>
-                  <ChevronDown className="h-3 w-3 text-slate-500" />
+                  <span className="max-w-[140px] truncate font-medium">{session.user?.name?.split(' ')[0] || session.user?.email}</span>
                 </div>
                 <Link href="/dashboard">
-                  <button className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-sm font-medium text-slate-200 transition-all hover:border-crimson-500/30 hover:bg-crimson-500/[0.08] hover:text-slate-100">
+                  <button className="btn-gradient inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white">
                     <LayoutDashboard className="h-3.5 w-3.5" />
                     Dashboard
                   </button>
                 </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-all hover:bg-white/[0.05] hover:text-slate-300"
+                  aria-label="Sign out"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-default px-3 py-2 text-sm font-medium text-muted transition-all hover:border-crimson-500/30 hover:text-primary"
                 >
                   <LogOut className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Out</span>
+                  <span className="hidden sm:inline">Sign out</span>
                 </button>
               </>
             ) : (
               <>
                 <Link href="/login" className="hidden sm:block">
-                  <button className="rounded-lg px-3.5 py-2 text-sm font-medium text-slate-400 transition-all hover:bg-white/[0.05] hover:text-slate-100">
+                  <button className="rounded-full px-4 py-2 text-sm font-medium text-secondary transition-all hover:bg-crimson-500/[0.06] hover:text-primary">
                     Sign in
                   </button>
                 </Link>
                 <Link href="/register">
-                  <button className="btn-gradient inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-white">
-                    <Sparkles className="h-3.5 w-3.5" />
+                  <button className="btn-gradient group inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white">
                     Get started free
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </button>
                 </Link>
               </>

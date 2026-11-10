@@ -65,8 +65,8 @@ export function SplitView({ left, right, initialLeftWidth = '40%', className = '
       {/* Resize Handle */}
       <div
         onMouseDown={handleMouseDown}
-        className={`group flex w-1 cursor-col-resize items-center justify-center bg-white/[0.03] transition-all hover:bg-crimson-500/30 hover:shadow-[0_0_10px_rgba(20,184,166,0.3)] active:bg-crimson-500/50 ${
-          isResizing ? 'bg-crimson-500/50 shadow-[0_0_15px_rgba(20,184,166,0.5)]' : ''
+        className={`group flex w-1 cursor-col-resize items-center justify-center bg-white/[0.03] transition-all hover:bg-crimson-500/40 active:bg-crimson-500/60 ${
+          isResizing ? 'bg-crimson-500/60' : ''
         }`}
         title="Drag to resize"
       >

@@ -62,6 +62,17 @@ export function JakesTemplate({ data, scale = 1 }: Props) {
         }}>
           {p.fullName || 'Your Name'}
         </h1>
+        {p.jobTitle && (
+          <p style={{
+            fontSize: '11px',
+            fontStyle: 'italic',
+            color: '#333',
+            marginBottom: '5px',
+            fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+          }}>
+            {p.jobTitle}
+          </p>
+        )}
         {contactParts.length > 0 && (
           <p style={{
             fontSize: '8.5px',
@@ -162,6 +173,9 @@ export function JakesTemplate({ data, scale = 1 }: Props) {
                 )}
               </div>
               <p style={{ fontSize: '8.5px', lineHeight: '1.6', color: '#222', marginTop: '2px' }}>{proj.description}</p>
+              {(proj.url || proj.github) && (
+                <p style={{ fontSize: '8px', color: '#111', marginTop: '1px' }}>{[proj.url, proj.github].filter(Boolean).join('  |  ')}</p>
+              )}
             </div>
           ))}
         </div>

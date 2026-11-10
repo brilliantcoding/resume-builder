@@ -17,6 +17,7 @@ export function CreativeTemplate({ data, scale = 1 }: Props) {
           {p.location && <span>📍 {p.location}</span>}
           {p.linkedin && <span>🔗 {p.linkedin}</span>}
           {p.github && <span>⌥ {p.github}</span>}
+          {p.website && <span>🌐 {p.website}</span>}
         </div>
       </div>
 
@@ -70,6 +71,9 @@ export function CreativeTemplate({ data, scale = 1 }: Props) {
                   <p style={{ fontWeight: '700', fontSize: '10px' }}>{proj.name}</p>
                   {proj.technologies.length > 0 && <p style={{ fontSize: '8px', color: '#9ca3af', marginBottom: '2px' }}>{proj.technologies.join(' · ')}</p>}
                   <p style={{ fontSize: '9px', color: '#4b5563' }}>{proj.description}</p>
+                  {(proj.url || proj.github) && (
+                    <p style={{ fontSize: '8px', color: '#e11d48', marginTop: '2px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -110,6 +114,9 @@ export function CreativeTemplate({ data, scale = 1 }: Props) {
                   <p style={{ fontWeight: '600', fontSize: '9.5px' }}>{edu.institution}</p>
                   <p style={{ fontSize: '8.5px', color: '#6b7280' }}>{edu.degree}{edu.field ? ` in ${edu.field}` : ''}</p>
                   <p style={{ fontSize: '8px', color: '#9ca3af' }}>{edu.startDate}{edu.startDate && edu.endDate ? ' – ' : ''}{edu.endDate}</p>
+                  {(edu.gpa || edu.honors) && (
+                    <p style={{ fontSize: '8px', color: '#9ca3af' }}>{[edu.gpa ? `GPA ${edu.gpa}` : '', edu.honors].filter(Boolean).join(' · ')}</p>
+                  )}
                 </div>
               ))}
             </div>

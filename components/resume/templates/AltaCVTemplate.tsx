@@ -153,6 +153,9 @@ export function AltaCVTemplate({ data, scale = 1 }: Props) {
                     )}
                   </div>
                   <p style={{ fontSize: '8.5px', color: BODY, lineHeight: '1.6' }}>{proj.description}</p>
+                  {(proj.url || proj.github) && (
+                    <p style={{ fontSize: '8px', color: LIGHT, marginTop: '2px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+                  )}
                 </div>
               ))}
             </div>

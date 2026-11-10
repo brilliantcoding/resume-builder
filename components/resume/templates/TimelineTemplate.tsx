@@ -137,6 +137,9 @@ export function TimelineTemplate({ data, scale = 1 }: Props) {
               right={proj.technologies.join(', ')}
             >
               <p style={{ fontSize: '8.5px', lineHeight: '1.6', color: '#444' }}>{proj.description}</p>
+              {(proj.url || proj.github) && (
+                <p style={{ fontSize: '8px', color: TEAL, marginTop: '2px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+              )}
             </TimelineItem>
           ))}
         </div>

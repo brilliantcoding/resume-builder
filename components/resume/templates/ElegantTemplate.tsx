@@ -25,7 +25,7 @@ export function ElegantTemplate({ data, scale = 1 }: Props) {
         <h1 style={{ fontSize: '30px', fontWeight: '300', letterSpacing: '6px', textTransform: 'uppercase' as const, color: '#1a1a1a', marginBottom: '6px' }}>{p.fullName || 'Your Name'}</h1>
         {p.jobTitle && <p style={{ fontSize: '10px', color: GOLD, letterSpacing: '2px', textTransform: 'uppercase' as const, fontWeight: '400', marginBottom: '10px' }}>{p.jobTitle}</p>}
         <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' as const, gap: '16px' }}>
-          {[p.phone, p.email, p.location, p.linkedin, p.github].filter(Boolean).map((v, i) => (
+          {[p.phone, p.email, p.location, p.linkedin, p.github, p.website].filter(Boolean).map((v, i) => (
             <span key={i} style={{ fontSize: '8.5px', color: '#666', letterSpacing: '0.5px' }}>{v}</span>
           ))}
         </div>
@@ -115,6 +115,9 @@ export function ElegantTemplate({ data, scale = 1 }: Props) {
                 {proj.technologies.length > 0 && <span style={{ fontSize: '8px', color: '#888' }}>{proj.technologies.join(' · ')}</span>}
               </div>
               <p style={{ fontSize: '9px', lineHeight: '1.7', color: '#444' }}>{proj.description}</p>
+              {(proj.url || proj.github) && (
+                <p style={{ fontSize: '8.5px', color: GOLD, fontStyle: 'italic', marginTop: '2px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+              )}
             </div>
           ))}
         </div>

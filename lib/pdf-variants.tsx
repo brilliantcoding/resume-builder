@@ -219,6 +219,7 @@ function ResumeSections({
                   <Text style={{ fontSize: 8, fontFamily: bold, color: theme.dark }}>{entry.name}</Text>
                   {entry.technologies.length ? <Text style={{ fontSize: 6.5, color: theme.accent, marginTop: 1 }}>{entry.technologies.join(' · ')}</Text> : null}
                   <Text style={{ fontSize: 7, lineHeight: 1.45, color: theme.body, marginTop: 2 }}>{entry.description}</Text>
+                  {entry.url || entry.github ? <Text style={{ fontSize: 6.5, color: theme.accent, marginTop: 1 }}>{[entry.url, entry.github].filter(Boolean).join('  ·  ')}</Text> : null}
                 </View>
               ))}
             </View>
@@ -246,7 +247,7 @@ function ResumeSections({
 function PDFMinimal({ data }: { data: ResumeData }) {
   const theme = themes.minimal
   const { personalInfo: p, summary } = data
-  const contacts = [p.email, p.phone, p.location, p.linkedin, p.github].filter(Boolean)
+  const contacts = [p.email, p.phone, p.location, p.linkedin, p.github, p.website].filter(Boolean)
   return (
     <Document><Page size="A4" style={{ padding: 38, fontFamily: 'Helvetica', color: theme.dark }}>
       <View style={{ marginBottom: 17 }}>
@@ -277,7 +278,7 @@ function PDFCreative({ data }: { data: ResumeData }) {
         <Text style={{ fontSize: 23, fontFamily: 'Helvetica-Bold', color: '#FFFFFF', marginBottom: 3 }}>{p.fullName || 'Your Name'}</Text>
         {p.jobTitle ? <Text style={{ fontSize: 10, color: '#FFE4E6', marginBottom: 7 }}>{p.jobTitle}</Text> : null}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-          {[p.email, p.phone, p.location, p.linkedin, p.github].filter(Boolean).map((value, index) => <Text key={index} style={{ color: '#FFF1F2', fontSize: 7 }}>{value}</Text>)}
+          {[p.email, p.phone, p.location, p.linkedin, p.github, p.website].filter(Boolean).map((value, index) => <Text key={index} style={{ color: '#FFF1F2', fontSize: 7 }}>{value}</Text>)}
         </View>
       </View>
       <View style={{ flexDirection: 'row', flex: 1 }}>
@@ -322,6 +323,7 @@ function PDFJakes({ data }: { data: ResumeData }) {
     <Document><Page size="A4" style={{ paddingTop: 31, paddingBottom: 30, paddingLeft: 40, paddingRight: 40, fontFamily: 'Times-Roman', color: theme.body }}>
       <View style={{ alignItems: 'center', marginBottom: 8 }}>
         <Text style={{ width: '100%', textAlign: 'center', fontFamily: 'Helvetica-Bold', color: '#000000', fontSize: 21, marginBottom: 4 }}>{p.fullName || 'Your Name'}</Text>
+        {p.jobTitle ? <Text style={{ width: '100%', textAlign: 'center', fontFamily: 'Times-Italic', color: '#333333', fontSize: 9, marginBottom: 4 }}>{p.jobTitle}</Text> : null}
         <View style={{ width: '100%', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 5 }}>
           {[p.location, p.phone, p.email, p.linkedin, p.github, p.website].filter(Boolean).map((value, index) => <Text key={index} style={{ fontSize: 7, color: '#333333' }}>{index > 0 ? ' | ' : ''}{value}</Text>)}
         </View>

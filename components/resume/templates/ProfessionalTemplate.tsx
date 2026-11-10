@@ -25,6 +25,7 @@ export function ProfessionalTemplate({ data, scale = 1 }: Props) {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '12px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: '700', letterSpacing: '2px', fontVariant: 'small-caps', marginBottom: '3px' }}>{p.fullName || 'Your Name'}</h1>
+        {p.jobTitle && <p style={{ fontSize: '11px', fontStyle: 'italic', marginBottom: '4px' }}>{p.jobTitle}</p>}
         {p.location && <p style={{ fontSize: '10px', marginBottom: '4px' }}>{p.location}</p>}
         {contactParts.length > 0 && (
           <p style={{ fontSize: '9px', color: '#333' }}>
@@ -100,7 +101,7 @@ export function ProfessionalTemplate({ data, scale = 1 }: Props) {
           <ul style={{ paddingLeft: '14px', margin: '6px 0 0', listStyleType: 'disc' }}>
             {certifications.map((cert) => (
               <li key={cert.id} style={{ fontSize: '9px', lineHeight: '1.65', marginBottom: '2px' }}>
-                {cert.name}{cert.issuer ? ` (${cert.issuer})` : ''}
+                {cert.name}{cert.issuer || cert.date ? ` (${[cert.issuer, cert.date].filter(Boolean).join(' · ')})` : ''}
               </li>
             ))}
           </ul>
@@ -118,6 +119,9 @@ export function ProfessionalTemplate({ data, scale = 1 }: Props) {
                 {proj.technologies.length > 0 && <span style={{ fontSize: '8.5px', color: '#555' }}>{proj.technologies.join(', ')}</span>}
               </div>
               <p style={{ fontSize: '9px', marginTop: '2px', lineHeight: '1.65' }}>{proj.description}</p>
+              {(proj.url || proj.github) && (
+                <p style={{ fontSize: '8.5px', color: '#1a6a48', marginTop: '1px' }}>{[proj.url, proj.github].filter(Boolean).join('  ·  ')}</p>
+              )}
             </div>
           ))}
         </div>
