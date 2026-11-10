@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
-import { FileText, LogOut, LayoutDashboard, ArrowRight } from 'lucide-react'
+import { FileText, LogOut, LayoutDashboard, ArrowRight, Briefcase } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export function Navbar() {
@@ -61,6 +61,12 @@ export function Navbar() {
               >
                 Templates
               </Link>
+              <Link
+                href="/jobs"
+                className="nav-underline rounded-full px-4 py-2 text-muted transition-colors hover:bg-crimson-500/[0.06] hover:text-primary"
+              >
+                Jobs
+              </Link>
             </div>
           )}
 
@@ -77,6 +83,12 @@ export function Navbar() {
                   </div>
                   <span className="max-w-[140px] truncate font-medium">{session.user?.name?.split(' ')[0] || session.user?.email}</span>
                 </div>
+                <Link href="/jobs">
+                  <button className="inline-flex items-center gap-1.5 rounded-full border border-default px-3.5 py-2 text-sm font-medium text-secondary transition-all hover:border-crimson-500/30 hover:text-crimson-500">
+                    <Briefcase className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Jobs</span>
+                  </button>
+                </Link>
                 <Link href="/dashboard">
                   <button className="btn-gradient inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white">
                     <LayoutDashboard className="h-3.5 w-3.5" />
