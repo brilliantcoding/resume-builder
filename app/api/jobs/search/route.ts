@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { aggregateJobSearch, parseRecency, RECENCY_WINDOWS } from '@/lib/jobs/search'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 30
+export const runtime = 'nodejs'
+export const maxDuration = 60
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams
@@ -17,10 +18,18 @@ export async function GET(request: NextRequest) {
   const remote = params.get('remote') === '1'
   const usOnly = params.get('us') !== '0'
   const recency = parseRecency(params.get('recency'))
+  const linkedinGuest = params.get('linkedin') !== '0'
   const limitRaw = Number(params.get('limit') ?? 60)
   const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(Math.trunc(limitRaw), 1), 150) : 60
 
-  const { jobs, sources, providers, tookMs } = await aggregateJobSearch({ q, location, remote, usOnly, recency })
+  const { jobs, sources, providers, tookMs } = await aggregateJobSearch({
+    q,
+    location,
+    remote,
+    usOnly,
+    recency,
+    linkedinGuest
+  })
 
   return NextResponse.json({
     query: { q, location, remote, usOnly, recency, recencyLabel: RECENCY_WINDOWS[recency].label },

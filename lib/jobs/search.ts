@@ -1,3 +1,5 @@
+import { linkedinGuestEnabled, searchLinkedInGuest } from './linkedin-guest'
+
 export type RecencyWindow = '24h' | '3d' | '7d'
 
 export const RECENCY_WINDOWS: Record<RecencyWindow, { hours: number; label: string }> = {
@@ -20,6 +22,7 @@ export interface JobSearchCriteria {
   remote?: boolean
   usOnly?: boolean
   recency?: RecencyWindow
+  linkedinGuest?: boolean
 }
 
 export interface JobResult {
@@ -333,7 +336,7 @@ function serperDateScope(window: RecencyWindow): string {
 function serperQuery(criteria: JobSearchCriteria): string {
   const parts = [criteria.q.trim()]
   const location = criteria.location?.trim().replace(/,/g, '')
-  if (location) parts.push(location)
+  if (location) parts.push(expandStateAbbreviations(location))
   if (criteria.remote) parts.push('remote')
 
   parts.push('job', 'hiring')
@@ -886,6 +889,13 @@ if (RAPIDAPI_KEY) JOB_PROVIDERS.push({ id: 'jsearch', label: 'Google for Jobs', 
 if (SERPER_API_KEY) {
   JOB_PROVIDERS.push({ id: 'serper', label: 'Indeed / LinkedIn / Glassdoor (Google)', search: searchSerper })
 }
+if (process.env.LINKEDIN_GUEST_ENABLED !== 'false') {
+  JOB_PROVIDERS.push({
+    id: 'linkedin-guest',
+    label: 'LinkedIn (guest)',
+    search: (criteria) => (linkedinGuestEnabled(criteria) ? searchLinkedInGuest(criteria) : Promise.resolve([]))
+  })
+}
 
 export function getJobSources(): JobSourceInfo[] {
   return [
@@ -911,7 +921,10 @@ export function getJobSources(): JobSourceInfo[] {
           enabled: false,
           keyName: 'SERPER_API_KEY',
           note: 'serper.dev — free signup, generous credits'
-        }
+        },
+    process.env.LINKEDIN_GUEST_ENABLED !== 'false'
+      ? { id: 'linkedin-guest', label: 'LinkedIn (guest)', enabled: true, note: 'public guest pages via Playwright' }
+      : { id: 'linkedin-guest', label: 'LinkedIn (guest)', enabled: false, note: 'disabled' }
   ]
 }
 
@@ -943,10 +956,232 @@ function relevanceScore(job: JobResult, tokens: string[]): number {
   return score
 }
 
-function locationMatches(job: JobResult, locationTokens: string[]): boolean {
-  if (job.remote) return true
-  const haystack = job.location.toLowerCase()
-  return locationTokens.every((token) => haystack.includes(token) || token === 'remote')
+interface StateRequirement {
+  abbrev: string
+  name: string
+}
+
+type LocationRequirement =
+  | { kind: 'state'; state: StateRequirement }
+  | { kind: 'phrase'; phrase: string }
+
+const US_STATES: Record<string, string> = {
+  al: 'Alabama',
+  ak: 'Alaska',
+  az: 'Arizona',
+  ar: 'Arkansas',
+  ca: 'California',
+  co: 'Colorado',
+  ct: 'Connecticut',
+  de: 'Delaware',
+  fl: 'Florida',
+  ga: 'Georgia',
+  hi: 'Hawaii',
+  id: 'Idaho',
+  il: 'Illinois',
+  in: 'Indiana',
+  ia: 'Iowa',
+  ks: 'Kansas',
+  ky: 'Kentucky',
+  la: 'Louisiana',
+  me: 'Maine',
+  md: 'Maryland',
+  ma: 'Massachusetts',
+  mi: 'Michigan',
+  mn: 'Minnesota',
+  ms: 'Mississippi',
+  mo: 'Missouri',
+  mt: 'Montana',
+  ne: 'Nebraska',
+  nv: 'Nevada',
+  nh: 'New Hampshire',
+  nj: 'New Jersey',
+  nm: 'New Mexico',
+  ny: 'New York',
+  nc: 'North Carolina',
+  nd: 'North Dakota',
+  oh: 'Ohio',
+  ok: 'Oklahoma',
+  or: 'Oregon',
+  pa: 'Pennsylvania',
+  ri: 'Rhode Island',
+  sc: 'South Carolina',
+  sd: 'South Dakota',
+  tn: 'Tennessee',
+  tx: 'Texas',
+  ut: 'Utah',
+  vt: 'Vermont',
+  va: 'Virginia',
+  wa: 'Washington',
+  wv: 'West Virginia',
+  wi: 'Wisconsin',
+  wy: 'Wyoming',
+  dc: 'District of Columbia'
+}
+
+const US_STATE_NAME_ENTRIES: Array<[string, string]> = Object.entries(US_STATES)
+  .map(([abbrev, name]) => [name.toLowerCase(), abbrev] as [string, string])
+  .sort((a, b) => b[0].length - a[0].length)
+
+const LOCATION_MODIFIERS = new Set([
+  'remote',
+  'hybrid',
+  'onsite',
+  'work',
+  'from',
+  'home',
+  'north',
+  'northern',
+  'south',
+  'southern',
+  'east',
+  'eastern',
+  'west',
+  'western',
+  'northeast',
+  'northwest',
+  'southeast',
+  'southwest',
+  'greater',
+  'metro',
+  'area',
+  'region',
+  'central',
+  'downtown',
+  'nearby',
+  'around',
+  'us',
+  'usa',
+  'united',
+  'states',
+  'city',
+  'in',
+  'of',
+  'the',
+  'and'
+])
+
+function normalizeLocationText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\bd\.?\s?c\.?\b/g, 'dc')
+    .replace(/[^a-z0-9\s,#&.+-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function locationHaystack(job: JobResult): string {
+  return normalizeLocationText(`${job.location} ${job.restriction ?? ''} ${job.title}`)
+}
+
+function findStateRequirement(text: string): StateRequirement | null {
+  const normalized = normalizeLocationText(text)
+  for (const [name, abbrev] of US_STATE_NAME_ENTRIES) {
+    const regex = new RegExp(`(?:^|[\\s,;])${escapeRegExp(name)}(?:$|[\\s,;])`)
+    if (regex.test(normalized)) return { abbrev, name }
+  }
+
+  for (const token of tokenize(normalized)) {
+    const name = US_STATES[token]
+    if (name) return { abbrev: token, name: name.toLowerCase() }
+  }
+
+  return null
+}
+
+function locationRequirementGroups(location: string): LocationRequirement[] {
+  const parts = location.split(/[,;]+/).map(normalizeLocationText).filter(Boolean)
+  const groups: LocationRequirement[] = []
+
+  for (const part of parts) {
+    const state = findStateRequirement(part)
+    if (state) {
+      groups.push({ kind: 'state', state })
+
+      const stateNameRegex = new RegExp(`(?:^|[\\s,;])${escapeRegExp(state.name)}(?:$|[\\s,;])`)
+      const stateAbbrevRegex = new RegExp(`(?:^|[\\s,;])${escapeRegExp(state.abbrev)}(?:$|[\\s,;])`, 'i')
+      const leftover = normalizeLocationText(part.replace(stateNameRegex, ' ').replace(stateAbbrevRegex, ' '))
+      const cityTerms = tokenize(leftover).filter((term) => !LOCATION_MODIFIERS.has(term) && term !== state.abbrev)
+      if (cityTerms.length > 0) groups.push({ kind: 'phrase', phrase: cityTerms.join(' ') })
+      continue
+    }
+
+    const terms = tokenize(part).filter((term) => !LOCATION_MODIFIERS.has(term))
+    const phrase = terms.join(' ')
+    if (phrase) groups.push({ kind: 'phrase', phrase })
+  }
+
+  return groups
+}
+
+function phraseRequirementMatches(phrase: string, haystack: string): boolean {
+  if (!phrase) return true
+  if (/remote|anywhere|work from home|location independent/.test(phrase)) {
+    if (/remote|anywhere|work from home|location independent/.test(haystack)) return true
+  }
+
+  const regex = new RegExp(`(?:^|[\\s,;])${escapeRegExp(phrase)}(?:$|[\\s,;])`)
+  if (regex.test(haystack)) return true
+
+  const tokens = tokenize(haystack)
+  return phrase.split(/\s+/).every((word) => tokens.includes(word))
+}
+
+function stateRequirementMatches(state: StateRequirement, haystack: string): boolean {
+  if (tokenize(haystack).includes(state.abbrev)) return true
+
+  const regex = new RegExp(`(?:^|[\\s,;])${escapeRegExp(state.name)}(?:$|[\\s,;])`)
+  if (!regex.test(haystack)) return false
+  if (state.name === 'virginia' && /(?:^|[\s,;])west\s+virginia(?:$|[\s,;])/.test(haystack)) return false
+  return true
+}
+
+function locationMatches(job: JobResult, groups: LocationRequirement[]): boolean {
+  const haystack = locationHaystack(job)
+  return groups.every((group) =>
+    group.kind === 'state' ? stateRequirementMatches(group.state, haystack) : phraseRequirementMatches(group.phrase, haystack)
+  )
+}
+
+function locationPriorityScore(job: JobResult, groups: LocationRequirement[]): number {
+  const haystack = locationHaystack(job)
+  const tokens = tokenize(haystack)
+  let score = 0
+
+  for (const group of groups) {
+    if (group.kind === 'state') {
+      if (tokens.includes(group.state.abbrev)) score += 3
+      else if (stateRequirementMatches(group.state, haystack)) score += 2
+    } else {
+      const exact = new RegExp(`(?:^|[\\s,;])${escapeRegExp(group.phrase)}(?:$|[\\s,;])`).test(haystack)
+      if (exact) score += 3
+      else if (phraseRequirementMatches(group.phrase, haystack)) score += 2
+    }
+  }
+
+  return score
+}
+
+export function expandStateAbbreviations(location: string): string {
+  const parts = normalizeLocationText(location)
+    .split(/[,;]+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+
+  const expanded = parts.map((part) => {
+    const state = findStateRequirement(part)
+    if (!state || part.includes(state.name)) return part
+
+    const stateAbbrevRegex = new RegExp(`(?:^|[\\s,;])${escapeRegExp(state.abbrev)}(?:$|[\\s,;])`, 'i')
+    const replaced = part.replace(stateAbbrevRegex, (match) => {
+      const lead = /^[,;\s]/.test(match) ? match[0] : ''
+      const tail = /[,;\s]$/.test(match) ? match.slice(-1) : ''
+      return `${lead}${state.name}${tail}`
+    })
+    return normalizeLocationText(replaced) || part
+  })
+
+  return expanded.join(', ') || location
 }
 
 const US_GEO = [
@@ -1020,13 +1255,13 @@ export async function aggregateJobSearch(criteria: JobSearchCriteria): Promise<{
   })
 
   const tokens = tokenize(criteria.q)
-  const locationTokens = criteria.location ? tokenize(criteria.location) : []
+  const locationRequirements = criteria.location ? locationRequirementGroups(criteria.location) : []
   const windowHours = RECENCY_WINDOWS[criteria.recency ?? DEFAULT_RECENCY].hours
 
   let jobs = [...merged.values()]
   if (criteria.usOnly) jobs = jobs.filter(isUsEligible)
   if (criteria.remote) jobs = jobs.filter((job) => job.remote)
-  if (locationTokens.length > 0) jobs = jobs.filter((job) => locationMatches(job, locationTokens))
+  if (locationRequirements.length > 0) jobs = jobs.filter((job) => locationMatches(job, locationRequirements))
   jobs = jobs.filter((job) => job._dateScoped || dateWithinHours(job.postedAt, windowHours))
 
   if (tokens.length > 0) {
@@ -1043,12 +1278,31 @@ export async function aggregateJobSearch(criteria: JobSearchCriteria): Promise<{
       const fullHay = `${titleHay} ${job._match ?? job.snippet ?? ''}`.toLowerCase()
       const coverage = tokens.filter((token) => fullHay.includes(token)).length
       const identity = tokens.some((token) => titleHay.includes(token))
-      return { job, coverage, identity, rareInFull: fullHay.includes(rarestToken), score: relevanceScore(job, tokens) }
+      const locationPriority =
+        locationRequirements.length > 0 ? locationPriorityScore(job, locationRequirements) : 0
+      return {
+        job,
+        coverage,
+        identity,
+        locationPriority,
+        rareInFull: fullHay.includes(rarestToken),
+        score: relevanceScore(job, tokens)
+      }
     })
-    const qualified = withMeta.filter((entry) => entry.identity && entry.rareInFull)
-    const pool = qualified.length > 0 ? qualified : withMeta.filter((entry) => entry.identity)
+    const locationFirst = locationRequirements.length > 0
+    const qualified = locationFirst
+      ? withMeta.filter((entry) => entry.locationPriority > 0 && (entry.identity || entry.coverage > 0))
+      : withMeta.filter((entry) => entry.identity && entry.rareInFull)
+    const pool = locationFirst
+      ? qualified.length > 0
+        ? qualified
+        : withMeta.filter((entry) => entry.locationPriority > 0)
+      : qualified.length > 0
+        ? qualified
+        : withMeta.filter((entry) => entry.identity)
     jobs = pool
       .sort((a, b) => {
+        if (b.locationPriority !== a.locationPriority) return b.locationPriority - a.locationPriority
         if (b.identity !== a.identity) return b.identity ? 1 : -1
         if (b.coverage !== a.coverage) return b.coverage - a.coverage
         if (b.score !== a.score) return b.score - a.score
