@@ -14,6 +14,7 @@ import { ProjectsSection } from './sections/ProjectsSection'
 import { CertificationsSection } from './sections/CertificationsSection'
 import { TailorModal } from './TailorModal'
 import { ATSScorePanel } from './ATSScorePanel'
+import { CoverLetterButton } from '@/components/cover-letter/CoverLetterModal'
 import { Save, Download, Eye, EyeOff, Sparkles, ChevronDown, ChevronRight, Check, TrendingUp } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { addAssistantEventListener, type AssistantEventDetail } from '@/components/ui/assistantEvents'
@@ -269,6 +270,7 @@ export function ResumeBuilder({ resumeId, initialData, initialTemplate, initialT
                 <TrendingUp className={`h-4 w-4 ${showATS ? 'text-emerald-400' : 'text-slate-400'}`} />
                 <span className="hidden sm:inline">ATS Score</span>
               </Button>
+              <CoverLetterButton resumeId={resumeId} resumeData={data} variant="ghost" />
               <Button variant="outline" size="sm" onClick={() => setShowPreview(!showPreview)}>
                 {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 <span className="hidden sm:inline">{showPreview ? 'Hide' : 'Show'} Preview</span>

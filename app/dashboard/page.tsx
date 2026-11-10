@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Plus, FileText, Trash2, Pencil, Clock, Sparkles, TrendingUp, LayoutGrid } from 'lucide-react'
 import { UploadResumeButton } from '@/components/dashboard/UploadResumeButton'
+import { CoverLetterButton } from '@/components/cover-letter/CoverLetterModal'
 
 interface ResumeCard {
   id: string
@@ -236,6 +237,13 @@ export default function DashboardPage() {
                             Edit Resume
                           </button>
                         </Link>
+                        <CoverLetterButton
+                          resumeId={resume.id}
+                          label={false}
+                          size="sm"
+                          className="!px-2.5"
+                          ariaLabel="Generate cover letter"
+                        />
                         <button
                           onClick={() => deleteResume(resume.id)}
                           disabled={deletingId === resume.id}
