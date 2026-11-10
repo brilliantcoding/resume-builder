@@ -39,12 +39,22 @@ const DEFAULT_RECENCY: RecencyWindow = '24h'
 
 let linkedinCooldownUntil = 0
 
+export function linkedinGuestRequested(criteria: JobSearchCriteria): boolean {
+  return criteria.linkedinGuest !== false && process.env.LINKEDIN_GUEST_ENABLED !== 'false'
+}
+
+export function linkedinGuestCooldownRemainingMs(): number {
+  return Math.max(0, linkedinCooldownUntil - Date.now())
+}
+
+export function linkedinGuestCooldownMessage(remainingMs = linkedinGuestCooldownRemainingMs()): string {
+  const seconds = Math.ceil(remainingMs / 1000)
+  if (seconds <= 60) return `LinkedIn guest search is cooling down after rate limiting. Retry in ${seconds}s.`
+  return `LinkedIn guest search is cooling down after rate limiting. Retry in about ${Math.ceil(seconds / 60)} min.`
+}
+
 export function linkedinGuestEnabled(criteria: JobSearchCriteria): boolean {
-  return (
-    criteria.linkedinGuest !== false &&
-    process.env.LINKEDIN_GUEST_ENABLED !== 'false' &&
-    Date.now() >= linkedinCooldownUntil
-  )
+  return linkedinGuestRequested(criteria) && linkedinGuestCooldownRemainingMs() === 0
 }
 
 function clean(value: string | null | undefined): string {
@@ -396,7 +406,10 @@ async function launchLinkedInBrowser(): Promise<Browser> {
 }
 
 export async function searchLinkedInGuest(criteria: JobSearchCriteria): Promise<JobResult[]> {
-  if (!linkedinGuestEnabled(criteria)) return []
+  if (!linkedinGuestRequested(criteria)) return []
+
+  const cooldownRemaining = linkedinGuestCooldownRemainingMs()
+  if (cooldownRemaining > 0) throw new Error(linkedinGuestCooldownMessage(cooldownRemaining))
 
   let browser: Browser | undefined
   try {
@@ -413,6 +426,13 @@ export async function searchLinkedInGuest(criteria: JobSearchCriteria): Promise<
 
     const window = criteria.recency ?? DEFAULT_RECENCY
     const rawCards = await collectLinkedInCards(context, criteria, window)
+    if (rawCards.length === 0) {
+      console.warn('[jobs] LinkedIn guest search returned no visible job cards', {
+        q: criteria.q,
+        location: criteria.location ?? null,
+        window
+      })
+    }
     const seen = new Set<string>()
     let jobs: JobResult[] = []
 
@@ -423,11 +443,21 @@ export async function searchLinkedInGuest(criteria: JobSearchCriteria): Promise<
       jobs.push(job)
     }
 
+    if (rawCards.length > 0 && jobs.length === 0) {
+      console.warn('[jobs] LinkedIn returned cards, but every card was filtered out', {
+        q: criteria.q,
+        location: criteria.location ?? null,
+        window,
+        rawCardCount: rawCards.length
+      })
+    }
+
     jobs = await validateLinkedInCards(context, jobs)
     return jobs
   } catch (err) {
     const message = linkedinError(err)
     setLinkedInCooldown(message)
+    console.warn('[jobs] LinkedIn guest search failed:', message)
     throw new Error(message)
   } finally {
     await browser?.close().catch(() => undefined)

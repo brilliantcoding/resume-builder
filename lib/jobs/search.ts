@@ -1,4 +1,4 @@
-import { linkedinGuestEnabled, searchLinkedInGuest } from './linkedin-guest'
+import { linkedinGuestCooldownRemainingMs, linkedinGuestRequested, searchLinkedInGuest } from './linkedin-guest'
 
 export type RecencyWindow = '24h' | '3d' | '7d'
 
@@ -893,7 +893,7 @@ if (process.env.LINKEDIN_GUEST_ENABLED !== 'false') {
   JOB_PROVIDERS.push({
     id: 'linkedin-guest',
     label: 'LinkedIn (guest)',
-    search: (criteria) => (linkedinGuestEnabled(criteria) ? searchLinkedInGuest(criteria) : Promise.resolve([]))
+    search: (criteria) => (linkedinGuestRequested(criteria) ? searchLinkedInGuest(criteria) : Promise.resolve([]))
   })
 }
 
@@ -923,7 +923,15 @@ export function getJobSources(): JobSourceInfo[] {
           note: 'serper.dev — free signup, generous credits'
         },
     process.env.LINKEDIN_GUEST_ENABLED !== 'false'
-      ? { id: 'linkedin-guest', label: 'LinkedIn (guest)', enabled: true, note: 'public guest pages via Playwright' }
+      ? {
+          id: 'linkedin-guest',
+          label: 'LinkedIn (guest)',
+          enabled: true,
+          note:
+            linkedinGuestCooldownRemainingMs() > 0
+              ? 'cooling down after LinkedIn rate limiting'
+              : 'public guest pages via Playwright'
+        }
       : { id: 'linkedin-guest', label: 'LinkedIn (guest)', enabled: false, note: 'disabled' }
   ]
 }

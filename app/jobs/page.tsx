@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Button } from '@/components/ui/Button'
 import {
@@ -40,6 +41,19 @@ interface SourceStatus {
   error?: string
 }
 
+interface ResumeProfile {
+  resumeId: string
+  resumeTitle: string
+  updatedAt: string
+  q: string
+  location?: string
+  targetRole: string
+  seniority: string | null
+  searchSkills: string[]
+  skills: string[]
+  searchReady: boolean
+}
+
 const EXAMPLES = ['React Engineer', 'Product Designer', 'Data Scientist', 'DevOps', 'Technical Writer']
 
 const RECENCY_OPTIONS = [
@@ -68,6 +82,60 @@ function relativeTime(iso?: string): string | null {
   if (days === 1) return 'yesterday'
   if (days < 30) return `${days}d ago`
   return `${Math.floor(days / 30)}mo ago`
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function skillTermPattern(skill: string, flags = 'i'): RegExp {
+  return new RegExp(`(^|\\s)${escapeRegExp(skill)}(?=\\s|$)`, flags)
+}
+
+function containsSkillTerm(query: string, skill: string): boolean {
+  const term = skill.trim()
+  return term.length > 0 && skillTermPattern(term).test(query)
+}
+
+function removeSkillTerm(query: string, skill: string): string {
+  return query
+    .replace(skillTermPattern(skill, 'gi'), ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+function addSkillTerm(query: string, skill: string): string {
+  const term = skill.trim()
+  return query.trim() ? `${query.trim()} ${term}` : term
+}
+
+function toggleSkillInFields(jobTitle: string, keywords: string, skill: string) {
+  const term = skill.trim()
+  if (!term) return { jobTitle, keywords }
+  if (containsSkillTerm(keywords, term)) {
+    return { jobTitle, keywords: removeSkillTerm(keywords, term) }
+  }
+  if (containsSkillTerm(jobTitle, term)) {
+    return { jobTitle: removeSkillTerm(jobTitle, term), keywords }
+  }
+  return { jobTitle, keywords: addSkillTerm(keywords, term) }
+}
+
+function combineSearchTerms(...terms: Array<string | undefined | null>): string {
+  return terms.map((term) => term?.trim() ?? '').filter(Boolean).join(' ').trim()
+}
+
+function profileSkillQuery(profile: ResumeProfile): string {
+  if (profile.searchSkills?.length) return profile.searchSkills.join(' ')
+  const role = profile.targetRole.trim()
+  if (role && profile.q.trim().toLowerCase().startsWith(role.toLowerCase())) {
+    return profile.q.trim().slice(role.length).trim()
+  }
+  return profile.q.trim()
+}
+
+function profileCombinedQuery(profile: ResumeProfile): string {
+  return combineSearchTerms(profile.targetRole, profileSkillQuery(profile))
 }
 
 function JobCard({ job }: { job: JobResult }) {
@@ -139,7 +207,8 @@ export default function JobsPage() {
   const [initialQuery] = useState(() =>
     typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('q') ?? ''
   )
-  const [q, setQ] = useState(initialQuery)
+  const [jobTitle, setJobTitle] = useState(initialQuery)
+  const [q, setQ] = useState('')
   const [location, setLocation] = useState('')
   const [remote, setRemote] = useState(true)
   const [usOnly, setUsOnly] = useState(true)
@@ -151,10 +220,23 @@ export default function JobsPage() {
   )
   const [message, setMessage] = useState<string | null>(null)
   const [tookMs, setTookMs] = useState<number | null>(null)
+  const [resumeSearch, setResumeSearch] = useState(false)
+  const [resumeProfile, setResumeProfile] = useState<ResumeProfile | null>(null)
+  const [resumeLoading, setResumeLoading] = useState(false)
   const qInputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const manualFieldsRef = useRef<{
+    jobTitle: string
+    q: string
+    location: string
+    remote: boolean
+    usOnly: boolean
+  } | null>(null)
+  const { data: session, status: sessionStatus } = useSession()
 
-  const clearQuery = () => {
+  const searchQuery = combineSearchTerms(jobTitle, q)
+
+  const clearKeywords = () => {
     setQ('')
     qInputRef.current?.focus()
   }
@@ -166,6 +248,8 @@ export default function JobsPage() {
       onlyRemote: boolean
       onlyUs: boolean
       window: RecencyId
+      useResume?: boolean
+      resumeId?: string
     }) => {
       abortRef.current?.abort()
       const controller = new AbortController()
@@ -177,6 +261,8 @@ export default function JobsPage() {
         if (options.loc.trim()) params.set('location', options.loc.trim())
         if (options.onlyRemote) params.set('remote', '1')
         if (!options.onlyUs) params.set('us', '0')
+        if (options.useResume) params.set('resume', '1')
+        if (options.resumeId) params.set('resumeId', options.resumeId)
         const res = await fetch(`/api/jobs/search?${params}`, { signal: controller.signal })
         const payload = await res.json()
         if (!res.ok) {
@@ -187,6 +273,7 @@ export default function JobsPage() {
         setJobs(payload.jobs)
         setSources(payload.sources)
         setTookMs(payload.tookMs)
+        if (payload.resume) setResumeProfile(payload.resume)
         setStatus('done')
       } catch (err) {
         if ((err as Error).name === 'AbortError') return
@@ -197,6 +284,85 @@ export default function JobsPage() {
     []
   )
 
+  const applyResumeProfileToForm = useCallback((profile: ResumeProfile) => {
+    setJobTitle(profile.targetRole.trim())
+    setQ(profileSkillQuery(profile))
+    setLocation(profile.location ?? '')
+    setRemote(profile.location ? /remote|wfh/i.test(profile.location) : true)
+  }, [])
+
+  const loadResumeProfile = useCallback(async () => {
+    setResumeLoading(true)
+    setMessage(null)
+    try {
+      const res = await fetch('/api/jobs/resume-profile', { cache: 'no-store' })
+      const payload = await res.json()
+      if (!res.ok) {
+        setResumeSearch(false)
+        setMessage(payload?.error ?? 'Could not load resume search profile.')
+        return null
+      }
+      const profile: ResumeProfile = payload.resume
+      setResumeProfile(profile)
+      applyResumeProfileToForm(profile)
+      return profile
+    } catch {
+      setResumeSearch(false)
+      setMessage('Could not load resume search profile. Check your connection and retry.')
+      return null
+    } finally {
+      setResumeLoading(false)
+    }
+  }, [applyResumeProfileToForm])
+
+  const toggleResumeSearch = async () => {
+    if (resumeSearch) {
+      const manual = manualFieldsRef.current
+      if (manual) {
+        setJobTitle(manual.jobTitle)
+        setQ(manual.q)
+        setLocation(manual.location)
+        setRemote(manual.remote)
+        setUsOnly(manual.usOnly)
+        manualFieldsRef.current = null
+      }
+      setResumeProfile(null)
+      setResumeSearch(false)
+      setMessage(null)
+      return
+    }
+
+    manualFieldsRef.current = { jobTitle, q, location, remote, usOnly }
+    setResumeSearch(true)
+
+    if (!session?.user?.id) {
+      setMessage('Sign in to load your resume profile.')
+      return
+    }
+
+    await loadResumeProfile()
+  }
+
+  useEffect(() => {
+    if (
+      !resumeSearch ||
+      sessionStatus !== 'authenticated' ||
+      !session?.user?.id ||
+      resumeLoading ||
+      resumeProfile
+    ) {
+      return
+    }
+
+    let cancelled = false
+    void Promise.resolve().then(() => {
+      if (!cancelled) void loadResumeProfile()
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [loadResumeProfile, resumeLoading, resumeProfile, resumeSearch, session?.user?.id, sessionStatus])
+
   useEffect(() => {
     if (!initialQuery) return
     void Promise.resolve().then(() =>
@@ -205,13 +371,27 @@ export default function JobsPage() {
     return () => abortRef.current?.abort()
   }, [initialQuery, runSearch])
 
-  const onSubmit = (e: React.FormEvent) => {
+  const usesResumeValues =
+    !!resumeProfile &&
+    searchQuery === profileCombinedQuery(resumeProfile) &&
+    location.trim() === (resumeProfile.location ?? '')
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (q.trim().length < 2) {
-      setMessage('Enter at least 2 characters.')
+
+    if (resumeSearch && !resumeProfile && resumeLoading) return
+
+    if (resumeSearch && !resumeProfile && !searchQuery) {
+      setMessage(session?.user?.id ? 'Resume search profile is not available yet.' : 'Sign in to load your resume profile.')
       return
     }
-    void runSearch({ query: q.trim(), loc: location, onlyRemote: remote, onlyUs: usOnly, window: recency })
+
+    if (searchQuery.length < 2) {
+      setMessage('Enter a job title or search terms.')
+      return
+    }
+
+    void runSearch({ query: searchQuery, loc: location, onlyRemote: remote, onlyUs: usOnly, window: recency })
   }
 
   const allSourcesDown = status === 'done' && sources.length > 0 && sources.every((s) => !s.ok)
@@ -232,23 +412,118 @@ export default function JobsPage() {
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="mt-6 rounded-2xl border border-default bg-surface p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <label className="flex-1 text-sm font-medium text-secondary">
-              Keyword
+        <section className="mt-6 flex flex-col gap-3 rounded-2xl border border-default bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-secondary">Search from my resume</h2>
+            <p className="mt-1 text-xs leading-relaxed text-muted">
+              Turn this on to fill the search fields from your latest resume. Everything stays editable.
+            </p>
+            {sessionStatus === 'unauthenticated' && (
+              <p className="mt-1 text-[11px] text-muted">
+                <Link href="/login" className="text-crimson-500 hover:underline">
+                  Sign in
+                </Link>{' '}
+                to load your resume profile.
+              </p>
+            )}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="text-xs font-semibold text-muted">{resumeLoading ? 'Loading' : resumeSearch ? 'On' : 'Off'}</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={resumeSearch}
+              aria-label="Search from my resume"
+              onClick={toggleResumeSearch}
+              disabled={resumeLoading}
+              className={`relative h-7 w-12 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                resumeSearch ? 'bg-crimson-600' : 'bg-white/10 hover:bg-white/[0.16]'
+              }`}
+            >
+              <span
+                className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                  resumeSearch ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </section>
+
+        <form onSubmit={onSubmit} className="mt-3 rounded-2xl border border-default bg-surface p-4">
+          {resumeSearch && (
+            <div className="mb-3 rounded-xl border border-crimson-500/25 bg-crimson-500/[0.05] px-3.5 py-3 text-sm">
+              {resumeLoading && <p className="text-muted">Loading your resume profile…</p>}
+              {!resumeLoading && resumeProfile && (
+                <>
+                  <p className="font-semibold text-secondary">{resumeProfile.resumeTitle}</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-muted">
+                    Resume default: {resumeProfile.targetRole || 'Resume skills'}
+                    {resumeProfile.seniority ? ` · ${resumeProfile.seniority}` : ''}
+                    {resumeProfile.location ? ` · near ${resumeProfile.location}` : ' · no resume location'}
+                  </p>
+                  {resumeProfile.skills.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {resumeProfile.skills.map((skill) => (
+                        <button
+                          key={skill}
+                          type="button"
+                          aria-pressed={containsSkillTerm(searchQuery, skill)}
+                          onClick={() => {
+                            const next = toggleSkillInFields(jobTitle, q, skill)
+                            setJobTitle(next.jobTitle)
+                            setQ(next.keywords)
+                          }}
+                          className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                            containsSkillTerm(searchQuery, skill)
+                              ? 'border-crimson-500/50 bg-crimson-500/[0.12] text-crimson-500'
+                              : 'border-default text-muted hover:border-crimson-500/30 hover:text-secondary'
+                          }`}
+                        >
+                          {skill}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+              {!resumeLoading && !resumeProfile && (
+                <p className="text-muted">
+                  {sessionStatus === 'unauthenticated'
+                    ? 'Sign in to load your resume profile.'
+                    : 'Your latest resume could not be loaded for search.'}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(220px,1fr)_minmax(12rem,0.7fr)_9rem_auto]">
+            <label className="text-sm font-medium text-secondary">
+              Job title
+              <div className="relative mt-1">
+                <input
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
+                  placeholder="React Engineer, Product Designer…"
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.05] px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 transition-colors hover:border-white/[0.16] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-crimson-500"
+                />
+              </div>
+            </label>
+            <label className="text-sm font-medium text-secondary">
+              Skills & keywords
               <div className="relative mt-1">
                 <input
                   ref={qInputRef}
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="React Engineer, Product Designer…"
+                  placeholder="React, TypeScript, AWS…"
                   className="w-full rounded-lg border border-white/10 bg-white/[0.05] px-3.5 py-2.5 pr-10 text-sm text-slate-100 placeholder:text-slate-600 transition-colors hover:border-white/[0.16] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-crimson-500"
                 />
                 {q && (
                   <button
                     type="button"
-                    onClick={clearQuery}
-                    aria-label="Clear search"
+                    onClick={clearKeywords}
+                    aria-label="Clear keywords"
                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted transition-colors hover:bg-white/[0.07] hover:text-primary"
                   >
                     <X className="h-3.5 w-3.5" />
@@ -256,7 +531,7 @@ export default function JobsPage() {
                 )}
               </div>
             </label>
-            <label className="w-full text-sm font-medium text-secondary sm:w-48">
+            <label className="text-sm font-medium text-secondary">
               Location
               <input
                 value={location}
@@ -265,7 +540,7 @@ export default function JobsPage() {
                 className="mt-1 w-full rounded-lg border border-white/10 bg-white/[0.05] px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 transition-colors hover:border-white/[0.16] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-crimson-500"
               />
             </label>
-            <label className="w-full text-sm font-medium text-secondary sm:w-40">
+            <label className="text-sm font-medium text-secondary">
               Posted within
               <select
                 value={recency}
@@ -279,11 +554,12 @@ export default function JobsPage() {
                 ))}
               </select>
             </label>
-            <Button type="submit" disabled={status === 'loading'} className="h-[42px] sm:w-auto">
+            <Button type="submit" disabled={status === 'loading' || resumeLoading} className="h-[42px] sm:w-auto">
               <Search className="mr-1.5 h-4 w-4" />
-              {status === 'loading' ? 'Searching…' : 'Search jobs'}
+              {status === 'loading' ? 'Searching…' : usesResumeValues ? 'Search from resume' : 'Search jobs'}
             </Button>
           </div>
+
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">Only</span>
             <button
@@ -313,14 +589,15 @@ export default function JobsPage() {
           </div>
         </form>
 
-        {status === 'idle' && (
+        {status === 'idle' && !resumeSearch && (
           <div className="mt-8 flex flex-wrap items-center gap-2 text-sm text-muted">
             Try:
             {EXAMPLES.map((example) => (
               <button
                 key={example}
                 onClick={() => {
-                  setQ(example)
+                  setJobTitle(example)
+                  setQ('')
                   void runSearch({ query: example, loc: '', onlyRemote: remote, onlyUs: usOnly, window: recency })
                 }}
                 className="rounded-full border border-default px-3 py-1 text-[13px] text-secondary transition-all hover:border-crimson-500/40 hover:text-crimson-500"
@@ -381,7 +658,7 @@ export default function JobsPage() {
 
         {status === 'done' && !allSourcesDown && jobs.length === 0 && (
           <div className="mt-8 rounded-xl border border-default bg-surface px-6 py-12 text-center">
-            <p className="font-medium">No jobs matched “{q}”.</p>
+            <p className="font-medium">No jobs matched “{searchQuery}”.</p>
             <p className="mt-1 text-sm text-muted">
               Try a broader keyword, widen “Posted within”, clear the location, or drop the remote filter.
             </p>
