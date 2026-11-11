@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { chatWithFallback } from '@/lib/local-ai'
+import { chatWithFallback, getAiErrorDetails } from '@/lib/local-ai'
 import { ResumeData } from '@/types/resume'
 
 export const maxDuration = 60
@@ -86,16 +86,13 @@ End with "Sincerely," and the candidate name.
     }
     return NextResponse.json({ content: cleaned })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
     console.error('[CoverLetter] AI error:', err)
-    const unavailable = /connection|network|ECONNREFUSED|ECONNRESET|ETIMEDOUT|timeout|fetch failed|401|403|Unauthorized|404|not found|model/i.test(msg)
+    const details = getAiErrorDetails(err, 'Cover letter generation')
     return NextResponse.json(
       {
-        error: unavailable
-          ? 'AI service is unavailable or misconfigured. Check the model server and try again.'
-          : 'Cover letter generation failed. Please try again.',
-        code: unavailable ? 'AI_UNAVAILABLE' : 'AI_PARSE_FAILED',
-        retryable: true,
+        error: details.error,
+        code: details.code,
+        retryable: details.retryable,
       },
       { status: 502 },
     )

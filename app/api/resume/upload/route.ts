@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { chatForParsing } from '@/lib/local-ai'
+import { chatForParsing, getAiErrorDetails } from '@/lib/local-ai'
 import { defaultResumeData, ResumeData } from '@/types/resume'
 // Use internal path to avoid pdf-parse running its test file on import
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -309,16 +309,13 @@ export async function POST(req: NextRequest) {
         )
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
       console.error('[Upload] AI parse error:', err)
-      const unavailable = /connection|network|ECONNREFUSED|ECONNRESET|ETIMEDOUT|timeout|fetch failed|401|403|Unauthorized|404|not found|model/i.test(msg)
+      const details = getAiErrorDetails(err, 'AI parsing')
       return NextResponse.json(
         {
-          error: unavailable
-            ? 'AI service is unavailable or misconfigured. Check the model server and try again.'
-            : 'AI parsing failed. Please try again.',
-          code: unavailable ? 'AI_UNAVAILABLE' : 'AI_PARSE_FAILED',
-          retryable: true,
+          error: details.error,
+          code: details.code,
+          retryable: details.retryable,
         },
         { status: 502 },
       )
